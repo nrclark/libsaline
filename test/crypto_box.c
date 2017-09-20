@@ -172,6 +172,8 @@ int main()
     rc = encrypt(encrypted, bob->public_key, eve->secret_key, nonce,
                  (UCHAR *)msg, strlen(msg));
     if (rc < 0) {
+        free(bob);
+        free(eve);
         return 1;
     }
     printf("encrypted: %s\n", to_hex(hexbuf, encrypted, rc));
@@ -180,6 +182,8 @@ int main()
     rc = decrypt(decrypted, eve->public_key, bob->secret_key, nonce, encrypted,
                  rc);
     if (rc < 0) {
+        free(bob);
+        free(eve);
         return 1;
     }
 
@@ -188,9 +192,13 @@ int main()
 
     if (memcmp(msg, decrypted, sizeof(msg) - 1) != 0) {
         printf("Error: message mismatch!\n");
+        free(bob);
+        free(eve);
         return 1;
     }
 
     printf("Tests passed OK\n");
+    free(bob);
+    free(eve);
     return 0;
 }
