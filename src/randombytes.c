@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "randombytes.h"
 #include "randombytes_config.h"
 
 static inline void randombytes_stdlib(uint8_t *output, uint64_t length)
