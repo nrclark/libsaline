@@ -16,7 +16,32 @@ LIBRARY := lib$(LIBNAME).a
 SRC := $(wildcard src/*.c) $(wildcard src/*.h)
 TESTS := $(wildcard test/*.c)
 
-CFLAGS ?= -O2 -Wall -Wextra -pedantic
+CFLAGS ?= -Wall -Wextra -pedantic
+
+ifdef DEBUG
+CFLAGS += -O0 -g
+CFLAGS += -fstack-protector-strong -fstack-protector-all
+CFLAGS += -fsanitize=shift
+CFLAGS += -fsanitize=undefined
+CFLAGS += -fsanitize=address
+CFLAGS += -fsanitize=alignment
+CFLAGS += -fsanitize=bool
+CFLAGS += -fsanitize=bounds
+CFLAGS += -fsanitize=bounds-strict
+CFLAGS += -fsanitize=enum
+CFLAGS += -fsanitize=float-cast-overflow
+CFLAGS += -fsanitize=float-divide-by-zero
+CFLAGS += -fsanitize=integer-divide-by-zero
+CFLAGS += -fsanitize=null
+CFLAGS += -fsanitize=object-size
+CFLAGS += -fno-sanitize-recover=all
+CFLAGS += -fsanitize=return
+CFLAGS += -fsanitize=returns-nonnull-attribute
+CFLAGS += -fsanitize=signed-integer-overflow
+else
+CFLAGS += -O2
+endif
+
 CC ?= gcc
 
 all: $(LIBRARY) include
