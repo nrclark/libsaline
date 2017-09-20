@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include "tweetnacl.h"
 
@@ -27,7 +28,7 @@ void randombytes(UCHAR buffer[], unsigned long long size)
 
 char* to_hex( char hex[], const UCHAR bin[], size_t length )
 {
-	int i;
+	size_t i;
 	UCHAR *p0 = (UCHAR *)bin;
 	char *p1 = hex;
 
@@ -61,7 +62,7 @@ int encrypt(UCHAR encrypted[], const UCHAR pk[], const UCHAR sk[], const UCHAR n
 	UCHAR temp_encrypted[MAX_MSG_SIZE];
 	int rc;
 
-	printf("encrypt\n", length);
+	printf("encrypt\n");
 
 	if(length+crypto_box_ZEROBYTES >= MAX_MSG_SIZE) {
 		return -2;
@@ -143,14 +144,14 @@ void print_user(User *user)
 	printf("secret key: %s\n\n", to_hex(shexbuf, user->secret_key, crypto_box_SECRETKEYBYTES ));
 }
 
-int main( int argc, char **argv )
+int main()
 {
 	char hexbuf[256];
 
 	int rc;
 	User *bob = new_user("bob");
 	User *eve = new_user("eve");
-	char *msg = "Hello";
+	char msg[] = "Hello";
 
 	UCHAR nonce[crypto_box_NONCEBYTES];
 	randombytes(nonce, crypto_box_NONCEBYTES);
@@ -161,7 +162,7 @@ int main( int argc, char **argv )
 	printf("message: %s\n", msg);
 
 	UCHAR encrypted[1000];
-	rc = encrypt(encrypted, bob->public_key, eve->secret_key, nonce, msg, strlen(msg));
+	rc = encrypt(encrypted, bob->public_key, eve->secret_key, nonce, (UCHAR *)msg, strlen(msg));
 	if( rc < 0 ) {
 		return 1;
 	}
@@ -176,5 +177,11 @@ int main( int argc, char **argv )
 	decrypted[rc] = '\0';
 	printf("decrypted: %s\n", decrypted);
 
+    if (memcmp(msg, decrypted, sizeof(msg) - 1) != 0) {
+        printf("Error: message mismatch!\n");
+        return 1;
+    }
+
+    printf("Tests passed OK\n");
 	return 0;
 }
