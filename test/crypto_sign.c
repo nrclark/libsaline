@@ -37,7 +37,7 @@ int main() {
 	UCHAR m[MAX_MSG_LEN+crypto_sign_BYTES];
 
 	memset(m, '\0', MAX_MSG_LEN);
-	int mlen = snprintf(m, MAX_MSG_LEN, "%s", "Hello World!");
+	int mlen = snprintf((char *)m, MAX_MSG_LEN, "%s", "Hello World!");
 
 	int rc = crypto_sign_keypair(pk, sk);
 	if(rc < 0) {
@@ -55,5 +55,6 @@ int main() {
 	}
 
 	printf("Verified!\n");
+    printf("Tests passed OK\n");
 	return 0;
 }
