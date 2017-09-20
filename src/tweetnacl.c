@@ -71,12 +71,12 @@ static int vn(const u8 *x, const u8 *y, int n)
     return (1 & ((d - 1) >> 8)) - 1;
 }
 
-int crypto_verify_16_tweet(const u8 *x, const u8 *y)
+int crypto_verify_16(const u8 *x, const u8 *y)
 {
     return vn(x, y, 16);
 }
 
-int crypto_verify_32_tweet(const u8 *x, const u8 *y)
+int crypto_verify_32(const u8 *x, const u8 *y)
 {
     return vn(x, y, 32);
 }
@@ -133,13 +133,13 @@ static void core(u8 *out, const u8 *in, const u8 *k, const u8 *c, int h)
         }
 }
 
-int crypto_core_salsa20_tweet(u8 *out, const u8 *in, const u8 *k, const u8 *c)
+int crypto_core_salsa20(u8 *out, const u8 *in, const u8 *k, const u8 *c)
 {
     core(out, in, k, c, 0);
     return 0;
 }
 
-int crypto_core_hsalsa20_tweet(u8 *out, const u8 *in, const u8 *k, const u8 *c)
+int crypto_core_hsalsa20(u8 *out, const u8 *in, const u8 *k, const u8 *c)
 {
     core(out, in, k, c, 1);
     return 0;
@@ -147,8 +147,8 @@ int crypto_core_hsalsa20_tweet(u8 *out, const u8 *in, const u8 *k, const u8 *c)
 
 static const u8 sigma[16] = "expand 32-byte k";
 
-int crypto_stream_salsa20_tweet_xor(u8 *c, const u8 *m, u64 b, const u8 *n,
-                                    const u8 *k)
+int crypto_stream_salsa20_xor(u8 *c, const u8 *m, u64 b, const u8 *n,
+                              const u8 *k)
 {
     u8 z[16], x[64];
     u32 u, i;
@@ -162,7 +162,7 @@ int crypto_stream_salsa20_tweet_xor(u8 *c, const u8 *m, u64 b, const u8 *n,
         z[i] = n[i];
     }
     while (b >= 64) {
-        crypto_core_salsa20_tweet(x, z, k, sigma);
+        crypto_core_salsa20(x, z, k, sigma);
         for (i = 0; i < 64; ++i) {
             c[i] = (m ? m[i] : 0) ^ x[i];
         }
@@ -179,7 +179,7 @@ int crypto_stream_salsa20_tweet_xor(u8 *c, const u8 *m, u64 b, const u8 *n,
         }
     }
     if (b) {
-        crypto_core_salsa20_tweet(x, z, k, sigma);
+        crypto_core_salsa20(x, z, k, sigma);
         for (i = 0; i < b; ++i) {
             c[i] = (m ? m[i] : 0) ^ x[i];
         }
@@ -187,24 +187,24 @@ int crypto_stream_salsa20_tweet_xor(u8 *c, const u8 *m, u64 b, const u8 *n,
     return 0;
 }
 
-int crypto_stream_salsa20_tweet(u8 *c, u64 d, const u8 *n, const u8 *k)
+int crypto_stream_salsa20(u8 *c, u64 d, const u8 *n, const u8 *k)
 {
-    return crypto_stream_salsa20_tweet_xor(c, 0, d, n, k);
+    return crypto_stream_salsa20_xor(c, 0, d, n, k);
 }
 
-int crypto_stream_xsalsa20_tweet(u8 *c, u64 d, const u8 *n, const u8 *k)
+int crypto_stream_xsalsa20(u8 *c, u64 d, const u8 *n, const u8 *k)
 {
     u8 s[32];
-    crypto_core_hsalsa20_tweet(s, n, k, sigma);
-    return crypto_stream_salsa20_tweet(c, d, n + 16, s);
+    crypto_core_hsalsa20(s, n, k, sigma);
+    return crypto_stream_salsa20(c, d, n + 16, s);
 }
 
-int crypto_stream_xsalsa20_tweet_xor(u8 *c, const u8 *m, u64 d, const u8 *n,
-                                     const u8 *k)
+int crypto_stream_xsalsa20_xor(u8 *c, const u8 *m, u64 d, const u8 *n,
+                               const u8 *k)
 {
     u8 s[32];
-    crypto_core_hsalsa20_tweet(s, n, k, sigma);
-    return crypto_stream_salsa20_tweet_xor(c, m, d, n + 16, s);
+    crypto_core_hsalsa20(s, n, k, sigma);
+    return crypto_stream_salsa20_xor(c, m, d, n + 16, s);
 }
 
 static void add1305(u32 *h, const u32 *c)
@@ -220,7 +220,7 @@ static void add1305(u32 *h, const u32 *c)
 static const u32 minusp[17] = {5, 0, 0, 0, 0, 0, 0, 0,  0,
                                0, 0, 0, 0, 0, 0, 0, 252};
 
-int crypto_onetimeauth_poly1305_tweet(u8 *out, const u8 *m, u64 n, const u8 *k)
+int crypto_onetimeauth_poly1305(u8 *out, const u8 *m, u64 n, const u8 *k)
 {
     u32 s, i, j, u, x[17], r[17], h[17], c[17], g[17];
 
@@ -296,43 +296,42 @@ int crypto_onetimeauth_poly1305_tweet(u8 *out, const u8 *m, u64 n, const u8 *k)
     return 0;
 }
 
-int crypto_onetimeauth_poly1305_tweet_verify(const u8 *h, const u8 *m, u64 n,
-                                             const u8 *k)
+int crypto_onetimeauth_poly1305_verify(const u8 *h, const u8 *m, u64 n,
+                                       const u8 *k)
 {
     u8 x[16];
-    crypto_onetimeauth_poly1305_tweet(x, m, n, k);
-    return crypto_verify_16_tweet(h, x);
+    crypto_onetimeauth_poly1305(x, m, n, k);
+    return crypto_verify_16(h, x);
 }
 
-int crypto_secretbox_xsalsa20poly1305_tweet(u8 *c, const u8 *m, u64 d,
-                                            const u8 *n, const u8 *k)
+int crypto_secretbox_xsalsa20poly1305(u8 *c, const u8 *m, u64 d, const u8 *n,
+                                      const u8 *k)
 {
     int i;
     if (d < 32) {
         return -1;
     }
-    crypto_stream_xsalsa20_tweet_xor(c, m, d, n, k);
-    crypto_onetimeauth_poly1305_tweet(c + 16, c + 32, d - 32, c);
+    crypto_stream_xsalsa20_xor(c, m, d, n, k);
+    crypto_onetimeauth_poly1305(c + 16, c + 32, d - 32, c);
     for (i = 0; i < 16; ++i) {
         c[i] = 0;
     }
     return 0;
 }
 
-int crypto_secretbox_xsalsa20poly1305_tweet_open(u8 *m, const u8 *c, u64 d,
-                                                 const u8 *n, const u8 *k)
+int crypto_secretbox_xsalsa20poly1305_open(u8 *m, const u8 *c, u64 d,
+                                           const u8 *n, const u8 *k)
 {
     int i;
     u8 x[32];
     if (d < 32) {
         return -1;
     }
-    crypto_stream_xsalsa20_tweet(x, 32, n, k);
-    if (crypto_onetimeauth_poly1305_tweet_verify(c + 16, c + 32, d - 32, x) !=
-        0) {
+    crypto_stream_xsalsa20(x, 32, n, k);
+    if (crypto_onetimeauth_poly1305_verify(c + 16, c + 32, d - 32, x) != 0) {
         return -1;
     }
-    crypto_stream_xsalsa20_tweet_xor(m, c, d, n, k);
+    crypto_stream_xsalsa20_xor(m, c, d, n, k);
     for (i = 0; i < 32; ++i) {
         m[i] = 0;
     }
@@ -401,7 +400,7 @@ static int neq25519(const gf a, const gf b)
     u8 c[32], d[32];
     pack25519(c, a);
     pack25519(d, b);
-    return crypto_verify_32_tweet(c, d);
+    return crypto_verify_32(c, d);
 }
 
 static u8 par25519(const gf a)
@@ -498,7 +497,7 @@ static void pow2523(gf o, const gf i)
     }
 }
 
-int crypto_scalarmult_curve25519_tweet(u8 *q, const u8 *n, const u8 *p)
+int crypto_scalarmult_curve25519(u8 *q, const u8 *n, const u8 *p)
 {
     u8 z[32];
     i64 x[80], r, i;
@@ -551,56 +550,53 @@ int crypto_scalarmult_curve25519_tweet(u8 *q, const u8 *n, const u8 *p)
     return 0;
 }
 
-int crypto_scalarmult_curve25519_tweet_base(u8 *q, const u8 *n)
+int crypto_scalarmult_curve25519_base(u8 *q, const u8 *n)
 {
-    return crypto_scalarmult_curve25519_tweet(q, n, _9);
+    return crypto_scalarmult_curve25519(q, n, _9);
 }
 
-int crypto_box_curve25519xsalsa20poly1305_tweet_keypair(u8 *y, u8 *x)
+int crypto_box_curve25519xsalsa20poly1305_keypair(u8 *y, u8 *x)
 {
     randombytes(x, 32);
-    return crypto_scalarmult_curve25519_tweet_base(y, x);
+    return crypto_scalarmult_curve25519_base(y, x);
 }
 
-int crypto_box_curve25519xsalsa20poly1305_tweet_beforenm(u8 *k, const u8 *y,
-                                                         const u8 *x)
+int crypto_box_curve25519xsalsa20poly1305_beforenm(u8 *k, const u8 *y,
+                                                   const u8 *x)
 {
     u8 s[32];
-    crypto_scalarmult_curve25519_tweet(s, x, y);
-    return crypto_core_hsalsa20_tweet(k, _0, s, sigma);
+    crypto_scalarmult_curve25519(s, x, y);
+    return crypto_core_hsalsa20(k, _0, s, sigma);
 }
 
-int crypto_box_curve25519xsalsa20poly1305_tweet_afternm(u8 *c, const u8 *m,
-                                                        u64 d, const u8 *n,
-                                                        const u8 *k)
+int crypto_box_curve25519xsalsa20poly1305_afternm(u8 *c, const u8 *m, u64 d,
+                                                  const u8 *n, const u8 *k)
 {
-    return crypto_secretbox_xsalsa20poly1305_tweet(c, m, d, n, k);
+    return crypto_secretbox_xsalsa20poly1305(c, m, d, n, k);
 }
 
-int crypto_box_curve25519xsalsa20poly1305_tweet_open_afternm(u8 *m, const u8 *c,
-                                                             u64 d, const u8 *n,
-                                                             const u8 *k)
+int crypto_box_curve25519xsalsa20poly1305_open_afternm(u8 *m, const u8 *c,
+                                                       u64 d, const u8 *n,
+                                                       const u8 *k)
 {
-    return crypto_secretbox_xsalsa20poly1305_tweet_open(m, c, d, n, k);
+    return crypto_secretbox_xsalsa20poly1305_open(m, c, d, n, k);
 }
 
-int crypto_box_curve25519xsalsa20poly1305_tweet(u8 *c, const u8 *m, u64 d,
-                                                const u8 *n, const u8 *y,
-                                                const u8 *x)
+int crypto_box_curve25519xsalsa20poly1305(u8 *c, const u8 *m, u64 d,
+                                          const u8 *n, const u8 *y, const u8 *x)
 {
     u8 k[32];
-    crypto_box_curve25519xsalsa20poly1305_tweet_beforenm(k, y, x);
-    return crypto_box_curve25519xsalsa20poly1305_tweet_afternm(c, m, d, n, k);
+    crypto_box_curve25519xsalsa20poly1305_beforenm(k, y, x);
+    return crypto_box_curve25519xsalsa20poly1305_afternm(c, m, d, n, k);
 }
 
-int crypto_box_curve25519xsalsa20poly1305_tweet_open(u8 *m, const u8 *c, u64 d,
-                                                     const u8 *n, const u8 *y,
-                                                     const u8 *x)
+int crypto_box_curve25519xsalsa20poly1305_open(u8 *m, const u8 *c, u64 d,
+                                               const u8 *n, const u8 *y,
+                                               const u8 *x)
 {
     u8 k[32];
-    crypto_box_curve25519xsalsa20poly1305_tweet_beforenm(k, y, x);
-    return crypto_box_curve25519xsalsa20poly1305_tweet_open_afternm(m, c, d, n,
-                                                                    k);
+    crypto_box_curve25519xsalsa20poly1305_beforenm(k, y, x);
+    return crypto_box_curve25519xsalsa20poly1305_open_afternm(m, c, d, n, k);
 }
 
 static u64 R(u64 x, int c)
@@ -661,7 +657,7 @@ static const u64 K[80] = {
     0x431d67c49c100d4cULL, 0x4cc5d4becb3e42b6ULL, 0x597f299cfc657e2aULL,
     0x5fcb6fab3ad6faecULL, 0x6c44198c4a475817ULL};
 
-int crypto_hashblocks_sha512_tweet(u8 *x, const u8 *m, u64 n)
+int crypto_hashblocks_sha512(u8 *x, const u8 *m, u64 n)
 {
     u64 z[8], b[8], a[8], w[16], t;
     int i, j;
@@ -716,7 +712,7 @@ static const u8 iv[64] = {
     0x2b, 0x3e, 0x6c, 0x1f, 0x1f, 0x83, 0xd9, 0xab, 0xfb, 0x41, 0xbd,
     0x6b, 0x5b, 0xe0, 0xcd, 0x19, 0x13, 0x7e, 0x21, 0x79};
 
-int crypto_hash_sha512_tweet(u8 *out, const u8 *m, u64 n)
+int crypto_hash_sha512(u8 *out, const u8 *m, u64 n)
 {
     u8 h[64], x[256];
     u64 i, b = n;
@@ -725,7 +721,7 @@ int crypto_hash_sha512_tweet(u8 *out, const u8 *m, u64 n)
         h[i] = iv[i];
     }
 
-    crypto_hashblocks_sha512_tweet(h, m, n);
+    crypto_hashblocks_sha512(h, m, n);
     m += n;
     n &= 127;
     m -= n;
@@ -741,7 +737,7 @@ int crypto_hash_sha512_tweet(u8 *out, const u8 *m, u64 n)
     n = 256 - 128 * (n < 112);
     x[n - 9] = b >> 61;
     ts64(x + n - 8, b << 3);
-    crypto_hashblocks_sha512_tweet(h, x, n);
+    crypto_hashblocks_sha512(h, x, n);
 
     for (i = 0; i < 64; ++i) {
         out[i] = h[i];
@@ -819,14 +815,14 @@ static void scalarbase(gf p[4], const u8 *s)
     scalarmult(p, q, s);
 }
 
-int crypto_sign_ed25519_tweet_keypair(u8 *pk, u8 *sk)
+int crypto_sign_ed25519_keypair(u8 *pk, u8 *sk)
 {
     u8 d[64];
     gf p[4];
     int i;
 
     randombytes(sk, 32);
-    crypto_hash_sha512_tweet(d, sk, 32);
+    crypto_hash_sha512(d, sk, 32);
     d[0] &= 248;
     d[31] &= 127;
     d[31] |= 64;
@@ -885,15 +881,14 @@ static void reduce(u8 *r)
     modL(r, x);
 }
 
-int crypto_sign_ed25519_tweet(u8 *sm, u64 *smlen, const u8 *m, u64 n,
-                              const u8 *sk)
+int crypto_sign_ed25519(u8 *sm, u64 *smlen, const u8 *m, u64 n, const u8 *sk)
 {
     u8 d[64], h[64], r[64];
     u64 i;
     i64 j, x[64];
     gf p[4];
 
-    crypto_hash_sha512_tweet(d, sk, 32);
+    crypto_hash_sha512(d, sk, 32);
     d[0] &= 248;
     d[31] &= 127;
     d[31] |= 64;
@@ -906,7 +901,7 @@ int crypto_sign_ed25519_tweet(u8 *sm, u64 *smlen, const u8 *m, u64 n,
         sm[32 + i] = d[32 + i];
     }
 
-    crypto_hash_sha512_tweet(r, sm + 32, n + 32);
+    crypto_hash_sha512(r, sm + 32, n + 32);
     reduce(r);
     scalarbase(p, r);
     pack(sm, p);
@@ -914,7 +909,7 @@ int crypto_sign_ed25519_tweet(u8 *sm, u64 *smlen, const u8 *m, u64 n,
     for (i = 0; i < 32; ++i) {
         sm[i + 32] = sk[i + 32];
     }
-    crypto_hash_sha512_tweet(h, sm, n + 64);
+    crypto_hash_sha512(h, sm, n + 64);
     reduce(h);
 
     for (i = 0; i < 64; ++i) {
@@ -923,10 +918,11 @@ int crypto_sign_ed25519_tweet(u8 *sm, u64 *smlen, const u8 *m, u64 n,
     for (i = 0; i < 32; ++i) {
         x[i] = (u64)r[i];
     }
-    for (i = 0; i < 32; ++i)
+    for (i = 0; i < 32; ++i) {
         for (j = 0; j < 32; ++j) {
             x[i + j] += h[i] * (u64)d[j];
         }
+    }
     modL(sm + 32, x);
 
     return 0;
@@ -974,8 +970,8 @@ static int unpackneg(gf r[4], const u8 p[32])
     return 0;
 }
 
-int crypto_sign_ed25519_tweet_open(u8 *m, u64 *mlen, const u8 *sm, u64 n,
-                                   const u8 *pk)
+int crypto_sign_ed25519_open(u8 *m, u64 *mlen, const u8 *sm, u64 n,
+                             const u8 *pk)
 {
     u64 i;
     u8 t[32], h[64];
@@ -996,7 +992,7 @@ int crypto_sign_ed25519_tweet_open(u8 *m, u64 *mlen, const u8 *sm, u64 n,
     for (i = 0; i < 32; ++i) {
         m[i + 32] = pk[i];
     }
-    crypto_hash_sha512_tweet(h, m, n);
+    crypto_hash_sha512(h, m, n);
     reduce(h);
     scalarmult(p, q, h);
 
@@ -1005,7 +1001,7 @@ int crypto_sign_ed25519_tweet_open(u8 *m, u64 *mlen, const u8 *sm, u64 n,
     pack(t, p);
 
     n -= 64;
-    if (crypto_verify_32_tweet(sm, t)) {
+    if (crypto_verify_32(sm, t)) {
         for (i = 0; i < n; ++i) {
             m[i] = 0;
         }
