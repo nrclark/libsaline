@@ -63,7 +63,8 @@ static void ts64(u8 *x, u64 u)
 
 static int vn(const u8 *x, const u8 *y, int n)
 {
-    u32 i, d = 0;
+    int i;
+    u32 d = 0;
     for (i = 0; i < n; ++i) {
         d |= x[i] ^ y[i];
     }
@@ -888,7 +889,8 @@ int crypto_sign_ed25519_tweet(u8 *sm, u64 *smlen, const u8 *m, u64 n,
                               const u8 *sk)
 {
     u8 d[64], h[64], r[64];
-    i64 i, j, x[64];
+    u64 i;
+    i64 j, x[64];
     gf p[4];
 
     crypto_hash_sha512_tweet(d, sk, 32);
@@ -975,7 +977,7 @@ static int unpackneg(gf r[4], const u8 p[32])
 int crypto_sign_ed25519_tweet_open(u8 *m, u64 *mlen, const u8 *sm, u64 n,
                                    const u8 *pk)
 {
-    int i;
+    u64 i;
     u8 t[32], h[64];
     gf p[4], q[4];
 
