@@ -1,6 +1,6 @@
 ################################################################################
 # @file Makefike
-# @brief Makefile building nacl CLI tools.
+# @brief Makefile for building NaCl library.
 #
 # @copyright Copyright 2017 Universal Audio, Inc. All Rights Reserved.
 #
@@ -12,11 +12,23 @@
 #------------------------------------------------------------------------------#
 
 LIBNAME := tweetnacl
+
+prefix ?= /usr/local
+exec_prefix ?= $(prefix)
+bindir ?= $(exec_prefix)/bin
+libdir ?= $(exec_prefix)/lib
+includedir ?= $(prefix)/include
+DESTDIR ?=
+
+#------------------------------------------------------------------------------#
+
 LIBRARY := lib$(LIBNAME).a
 SRC := $(wildcard src/*.c) $(wildcard src/*.h)
 TESTS := $(wildcard test/*.c)
 
-CFLAGS ?= -Wall -Wextra -pedantic
+#------------------------------------------------------------------------------#
+
+CFLAGS ?= -Wall -Wextra -Werror -pedantic
 
 ifdef DEBUG
 CFLAGS += -O0 -g
@@ -99,7 +111,7 @@ clean::
 #------------------------------------------------------------------------------#
 
 syntax:
-	$(foreach x,$(SRC),$(CC) $(CFLAGS) -fsyntax-only $(x)$(\n))
+	$(foreach x,$(SRC),$(CC) $(CFLAGS) -I . -I $(dir $(x)) -fsyntax-only $(x)$(\n))
 
 #------------------------------------------------------------------------------#
 
@@ -118,3 +130,12 @@ test: $(TESTS:test/%.c=run-%)
 
 clean::
 	rm -rf $(TESTS:test/%.c=%) 
+
+#------------------------------------------------------------------------------#
+
+INSTALL_LIBDIR := $(abspath $(DESTDIR)/$(libdir))
+INSTALL_INCLUDEDIR := $(abspath $(DESTDIR)/$(includedir))
+
+install: $(LIBRARY) $(INCLUDES)
+	$(foreach x,$(filter %.a,$^),install -m644 -D $(x) $(INSTALL_LIBDIR)/$(notdir $x)$(\n))
+	$(foreach x,$(filter %.h,$^),install -m644 -D $(x) $(INSTALL_INCLUDEDIR)/$(notdir $x)$(\n))
