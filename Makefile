@@ -51,7 +51,7 @@ CFLAGS += -fsanitize=return
 CFLAGS += -fsanitize=returns-nonnull-attribute
 CFLAGS += -fsanitize=signed-integer-overflow
 else
-CFLAGS += -O2
+CFLAGS += -O3
 endif
 
 CC ?= gcc
