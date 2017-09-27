@@ -31,6 +31,15 @@ The changes of interest are:
 
 8. Added a Makefile for easy compilation and installation.
 
+## Build Instructions ##
+
+1. Generate `randombytes_config.h` to select your system's random-number
+   generator (see `randombytes.h` for more information).
+
+2. Build `libtweetnacl.a` by running `make`.
+
+3. (optional) Install with `make install`. Supports `prefix` and `DESTDIR`.
+
 ## Current Status ##
 
 At the current time, this library should be fully functional, and
