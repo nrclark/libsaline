@@ -1,0 +1,95 @@
+AC_INIT([libtweetnacl], [1.0.0], [nicholas.clark@gmail.com])
+
+#------------------------- Init Automake / Autoconf  --------------------------#
+
+AC_PREREQ([2.69])
+AM_INIT_AUTOMAKE
+AC_USE_SYSTEM_EXTENSIONS
+
+#------------------------ Configure Source Locations  -------------------------#
+
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_SRCDIR([randombytes.h])
+AC_CONFIG_HEADERS([config.h])
+
+#------------------------ Confirm Rand() Requirements  ------------------------#
+
+# Checks for programs.
+AC_PROG_CC
+AC_PROG_INSTALL
+AM_PROG_AR
+AM_PROG_LIBTOOL
+
+# Checks for libraries.
+
+# Checks for header files.
+AC_CHECK_HEADERS([stdint.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_C_INLINE
+AC_TYPE_UINT64_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT8_T
+
+AC_TYPE_INT64_T
+AC_TYPE_INT32_T
+AC_TYPE_INT16_T
+AC_TYPE_INT8_T
+
+#----------------------------- Add Custom Options  ----------------------------#
+
+AC_PRESERVE_HELP_ORDER
+
+AC_ARG_WITH([rand],
+            [AS_HELP_STRING([--with-rand], [Source to use for random data.
+             Can be 'stdlib' for stdlib.h rand(), 'urandom' for /dev/urandom,
+             or 'devrandom' for /dev/random. Most Unix-like targets should use
+             'urandom'. Embedded targets should use 'stdlib'. Nobody should use
+             'devrandom'. Must be set to a valid option.])],
+            [rand_source=$withval],
+            [AS_BOX([Error: '--with-rand' not set. See --help for details.]) >&2
+             AS_EXIT([1])])
+
+#-------------------- Place rand() selection into config.h  -------------------#
+
+AS_CASE($rand_source,
+     [urandom],
+     [AC_DEFINE([RANDOMBYTES_USE_URANDOM], [1],
+      [Use /dev/urandom to generate random numbers. Ideal for use on Linux])],
+     [devrandom],
+     [AC_DEFINE([RANDOMBYTES_USE_DEVRANDOM], [1],
+      [Use /dev/random to generate random numbers. Not for use on Linux])],
+     [stdlib],
+     [AC_DEFINE([RANDOMBYTES_USE_STDLIB], [1],
+      [Use the deterministic stdlib for "random" numbers])],
+     [yes],
+     [AC_MSG_ERROR([No value given for --with-rand. See --help for details.])],
+     [AC_MSG_ERROR([Unknown value for --with-rand: '$rand_source'.])])
+
+#------------------------ Confirm Rand() Requirements  ------------------------#
+
+AC_DEFUN([AC_REQUIRE_HEADER], [AC_CHECK_HEADER([$1],,
+         [AC_MSG_ERROR([Missing header "$1" required for '$2'.])])])
+
+AC_DEFUN([AC_REQUIRE_FUNCTION], [AC_CHECK_FUNC([$1],,
+         [AC_MSG_ERROR([Missing function "$1" required for '$2'.])])])
+
+AS_CASE($rand_source,
+     [*random],
+     [AC_REQUIRE_HEADER([fcntl.h],[$rand_source])
+      AC_REQUIRE_HEADER([unistd.h],[$rand_source])
+      AC_REQUIRE_HEADER([sys/stat.h],[$rand_source])
+      AC_REQUIRE_FUNCTION([open],[$rand_source])
+      AC_REQUIRE_FUNCTION([read],[$rand_source])],
+
+     [stdlib],
+     [AC_REQUIRE_HEADER([stdlib.h],[$rand_source])
+      AC_REQUIRE_FUNCTION([rand],[$rand_source])],
+
+     [])
+
+#------------------------------ Generate Outputs ------------------------------#
+
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT

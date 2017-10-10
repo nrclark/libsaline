@@ -1,12 +1,18 @@
 #include <stdint.h>
 #include <stdlib.h>
-#include <sys/types.h>
+
+#include "config.h"
+#include "randombytes.h"
+
+#if !defined RANDOMBYTES_USE_STDLIB
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#endif
 
-#include "randombytes.h"
-#include "randombytes_config.h"
+#if defined RANDOMBYTES_USE_STDLIB
+
+extern int rand(void);
 
 static inline void randombytes_stdlib(uint8_t *output, uint64_t length)
 {
@@ -14,6 +20,8 @@ static inline void randombytes_stdlib(uint8_t *output, uint64_t length)
         *output++ = rand();
     }
 }
+
+#else
 
 static inline void randombytes_rand_device(uint8_t *output, uint64_t length,
                                            const char *device)
@@ -52,13 +60,15 @@ static inline void randombytes_devrandom(uint8_t *output, uint64_t length)
     randombytes_rand_device(output, length, "/dev/random");
 }
 
+#endif
+
 void randombytes(uint8_t *output, uint64_t length)
 {
-#if defined(RANDOMBYTES_USE_STDLIB)
+#if defined RANDOMBYTES_USE_STDLIB
     randombytes_stdlib(output, length);
-#elif defined(RANDOMBYTES_USE_URANDOM)
+#elif defined RANDOMBYTES_USE_URANDOM
     randombytes_urandom(output, length);
-#elif defined(RANDOMBYTES_USE_DEVRANDOM)
+#elif defined RANDOMBYTES_USE_DEVRANDOM
     randombytes_devrandom(output, length);
 #else
 #error randombytes: no method specified!
