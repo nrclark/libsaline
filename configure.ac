@@ -1,16 +1,17 @@
 AC_INIT([libtweetnacl], [1.0.0], [nicholas.clark@gmail.com])
 
+#------------------------ Configure Source Locations  -------------------------#
+
+AC_CONFIG_AUX_DIR([build-aux])
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_SRCDIR([randombytes.h])
+AC_CONFIG_HEADERS([config.h])
+
 #------------------------- Init Automake / Autoconf  --------------------------#
 
 AC_PREREQ([2.69])
 AM_INIT_AUTOMAKE
 AC_USE_SYSTEM_EXTENSIONS
-
-#------------------------ Configure Source Locations  -------------------------#
-
-AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_SRCDIR([randombytes.h])
-AC_CONFIG_HEADERS([config.h])
 
 #------------------------ Confirm Rand() Requirements  ------------------------#
 
