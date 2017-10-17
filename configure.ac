@@ -37,9 +37,26 @@ AC_TYPE_INT32_T
 AC_TYPE_INT16_T
 AC_TYPE_INT8_T
 
+#--------------------------- Custom Autoconf Macros  --------------------------#
+
+# Checks to make sure that a header is present. Throws a MSG_ERROR if missing.
+AC_DEFUN([AC_REQUIRE_HEADER], [AC_CHECK_HEADER([$1],,
+         [AC_MSG_ERROR([Missing header "$1" required for '$2'.])])])
+
+# Checks to make sure that a function is present. Throws a MSG_ERROR if missing.
+AC_DEFUN([AC_REQUIRE_FUNCTION], [AC_CHECK_FUNC([$1],,
+         [AC_MSG_ERROR([Missing function "$1" required for '$2'.])])])
+
+# Creates a visually-delineated block in ./configure's --help section.
+# Useful for library-specific options.
+AC_DEFUN([AC_CREATE_HELP_SECTION],[AC_ARG_WITH([__dummy_with__],
+[
+$1:], [],[])])
+
 #----------------------------- Add Custom Options  ----------------------------#
 
 AC_PRESERVE_HELP_ORDER
+AC_CREATE_HELP_SECTION([Custom Options])
 
 AC_ARG_WITH([rand],
             [AS_HELP_STRING([--with-rand], [Source to use for random data.
@@ -68,12 +85,6 @@ AS_CASE($rand_source,
      [AC_MSG_ERROR([Unknown value for --with-rand: '$rand_source'.])])
 
 #------------------------ Confirm Rand() Requirements  ------------------------#
-
-AC_DEFUN([AC_REQUIRE_HEADER], [AC_CHECK_HEADER([$1],,
-         [AC_MSG_ERROR([Missing header "$1" required for '$2'.])])])
-
-AC_DEFUN([AC_REQUIRE_FUNCTION], [AC_CHECK_FUNC([$1],,
-         [AC_MSG_ERROR([Missing function "$1" required for '$2'.])])])
 
 AS_CASE($rand_source,
      [*random],
