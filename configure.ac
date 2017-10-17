@@ -41,8 +41,10 @@ AC_TYPE_INT8_T
 #--------------------------- Custom Autoconf Macros  --------------------------#
 
 # Checks to make sure that a header is present. Throws a MSG_ERROR if missing.
+
 AC_DEFUN([AC_REQUIRE_HEADER], [AC_CHECK_HEADER([$1],,
          [AC_MSG_ERROR([Missing header "$1" required for '$2'.])])])
+
 
 # Checks to make sure that a function is present. Throws a MSG_ERROR if missing.
 AC_DEFUN([AC_REQUIRE_FUNCTION], [AC_CHECK_FUNC([$1],,
@@ -50,9 +52,22 @@ AC_DEFUN([AC_REQUIRE_FUNCTION], [AC_CHECK_FUNC([$1],,
 
 # Creates a visually-delineated block in ./configure's --help section.
 # Useful for library-specific options.
+
 AC_DEFUN([AC_CREATE_HELP_SECTION],[AC_ARG_WITH([__dummy_with__],
 [
 $1:], [],[])])
+
+# Guesses the value of rand_source from the value of host_os (the OS of the
+# machine which will be running the compiled code). Assumes stdlib if the
+# host OS is unknown/unspecified, and urandom otherwise.
+
+AC_DEFUN([AC_GUESS_RAND],
+[AC_REQUIRE([AC_CANONICAL_HOST])
+ AS_CASE([x$host_os], [x], [rand_source=stdlib],
+                      [xunknown], [rand_source=stdlib],
+                      [xnone], [rand_source=stdlib],
+                      [rand_source='urandom'])
+ AC_MSG_NOTICE([Assuming --with-rand=$rand_source (from host: $host_os)])])
 
 #----------------------------- Add Custom Options  ----------------------------#
 
@@ -63,11 +78,10 @@ AC_ARG_WITH([rand],
             [AS_HELP_STRING([--with-rand], [Source to use for random data.
              Can be 'stdlib' for stdlib.h rand(), 'urandom' for /dev/urandom,
              or 'devrandom' for /dev/random. Most Unix-like targets should use
-             'urandom'. Embedded targets should use 'stdlib'. Nobody should use
-             'devrandom'. Must be set to a valid option.])],
+             'urandom'. Standalone targets should use 'stdlib'. Nobody should
+             use 'devrandom'.])],
             [rand_source=$withval],
-            [AS_BOX([Error: '--with-rand' not set. See --help for details.]) >&2
-             AS_EXIT([1])])
+            [AC_GUESS_RAND])
 
 #-------------------- Place rand() selection into config.h  -------------------#
 
