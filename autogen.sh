@@ -1,1 +1,4 @@
-autoreconf -i && automake --add-missing
+#!/bin/sh
+set -e
+autoreconf -i
+automake --add-missing

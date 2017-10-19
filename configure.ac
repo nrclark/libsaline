@@ -1,9 +1,15 @@
-AC_INIT([libtweetnacl], [1.0.0], [nicholas.clark@gmail.com])
+
+#------------------------------------------------------------------------------#
+
+m4_include([m4/semantic_version.m4])
+SEMANTIC_VERSION_SET_FILE([VERSION])
+
+AC_INIT([libtweetnacl], SEMANTIC_VERSION, [nicholas.clark@gmail.com])
 
 #------------------------ Configure Source Locations  -------------------------#
 
-AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_SRCDIR([randombytes.h])
 AC_CONFIG_HEADERS([config.h])
 
