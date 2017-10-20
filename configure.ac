@@ -3,8 +3,8 @@
 
 m4_include([m4/semantic_version.m4])
 SEMANTIC_VERSION_SET_FILE([VERSION])
-
 AC_INIT([libtweetnacl], SEMANTIC_VERSION, [nicholas.clark@gmail.com])
+AC_SUBST([LIB_RELEASE],[SEMANTIC_VERSION])
 
 #------------------------ Configure Source Locations  -------------------------#
 
@@ -16,7 +16,7 @@ AC_CONFIG_HEADERS([config.h])
 #------------------------- Init Automake / Autoconf  --------------------------#
 
 AC_PREREQ([2.69])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([foreign])
 AC_USE_SYSTEM_EXTENSIONS
 
 #------------------------ Confirm Rand() Requirements  ------------------------#
