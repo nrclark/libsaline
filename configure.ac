@@ -24,10 +24,10 @@ AC_USE_SYSTEM_EXTENSIONS
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_INSTALL
+
 AM_PROG_AR
 AM_PROG_LIBTOOL
-
-# Checks for libraries.
+LT_INIT
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdint.h])
@@ -43,6 +43,8 @@ AC_TYPE_INT64_T
 AC_TYPE_INT32_T
 AC_TYPE_INT16_T
 AC_TYPE_INT8_T
+
+AC_TYPE_SIZE_T
 
 #--------------------------- Custom Autoconf Macros  --------------------------#
 
@@ -73,7 +75,8 @@ AC_DEFUN([AC_GUESS_RAND],
                       [xunknown], [rand_source=stdlib],
                       [xnone], [rand_source=stdlib],
                       [rand_source='urandom'])
- AC_MSG_NOTICE([Assuming --with-rand=$rand_source (from host: $host_os)])])
+ AC_MSG_NOTICE([Assuming --with-rand=$rand_source (from host: $host_os)])
+])
 
 #----------------------------- Add Custom Options  ----------------------------#
 
@@ -120,6 +123,8 @@ AS_CASE($rand_source,
       AC_REQUIRE_FUNCTION([rand],[$rand_source])],
 
      [])
+
+
 
 #------------------------------ Generate Outputs ------------------------------#
 
