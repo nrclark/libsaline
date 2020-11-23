@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-""" Ctypes-based wrapper that uses an externally compiled libubcrypt for
-encrypting/decrypting data, or for generating keys. """
+""" Ctypes wrappers around various groups of functions/constants from the
+libcrypto NaCL wrapper, which should be compiled externally. """
+
 import copy
 import ctypes
 import random
 
 class CryptoBox():
-    """ Ctypes wrapper around libubcrypt. Provides functions for generating
-    keypairs, encrypting/decrypting file-objects, or encrypting/decrypting
-    bytes instances. """
+    """ Ctypes wrapper around the crypto_box() functions from libcrypto (which
+    provides wrappers around NaCl functions/constants). """
 
     def __init__(self, libfile="./libcrypto.so"):
         dll = ctypes.cdll.LoadLibrary(libfile)
@@ -80,7 +80,7 @@ class CryptoBox():
         self.dll = dll
 
     def crypto_box_keypair(self):
-        """Generates a ucbcrypt keypair as binary data. Returns the result as
+        """Generates a crypto_box keypair as binary data. Returns the result as
         a pair of bytes instances. """
 
         public = ctypes.create_string_buffer(self.crypto_box_PUBLICKEYBYTES)
@@ -94,6 +94,9 @@ class CryptoBox():
         return public.raw, secret.raw
 
     def crypto_box(self, plaintext, public, secret, nonce=None):
+        """ Use a receiver's public key, a sender's secret key, and a nonce
+        to encrypt a block of plaintext data. """
+
         if nonce is None:
             iterator = range(self.crypto_box_NONCEBYTES)
             nonce = bytes([random.randint(0,255) for x in iterator])
@@ -116,6 +119,9 @@ class CryptoBox():
         return buffer.raw[self.crypto_box_BOXZEROBYTES:], nonce
 
     def crypto_box_open(self, cypher, public, secret, nonce):
+        """ Use a receiver's secret key, a sender's public key, and a nonce
+        to decrypt a block of encrypted data. """
+
         assert len(public) == self.crypto_box_PUBLICKEYBYTES
         assert len(secret) == self.crypto_box_SECRETKEYBYTES
         assert len(nonce) == self.crypto_box_NONCEBYTES
@@ -134,6 +140,14 @@ class CryptoBox():
         return buffer.raw[self.crypto_box_ZEROBYTES:]
 
     def crypto_box_beforenm(self, public, secret):
+        """ Calculate a crypto_box shared-secret from a one user's public key
+        and another user's secret key. The result is supplied to
+        crypto_box_afternm() or crypto_box_open_afternm() to get the equivalent
+        of crypto_box() or crypto_box_open().
+        
+        Used to provide a computational speedup in applications where there
+        will be repeated calls that use the same keysets. """
+
         assert len(public) == self.crypto_box_PUBLICKEYBYTES
         assert len(secret) == self.crypto_box_SECRETKEYBYTES
 
@@ -147,6 +161,9 @@ class CryptoBox():
         return shared.raw
 
     def crypto_box_afternm(self, plaintext, shared, nonce=None):
+        """ Use with the result of crypto_box_beforenm() to get the equivalent
+        of a call to crypto_box(). """
+
         if nonce is None:
             iterator = range(self.crypto_box_NONCEBYTES)
             nonce = bytes([random.randint(0,255) for x in iterator])
@@ -169,6 +186,9 @@ class CryptoBox():
         return buffer.raw[self.crypto_box_BOXZEROBYTES:], nonce
 
     def crypto_box_open_afternm(self, cypher, shared, nonce):
+        """ Use with the result of crypto_box_open_afternm() to get the
+        equivalent of a call to crypto_box(). """
+
         assert len(shared) == self.crypto_box_BEFORENMBYTES
         assert len(nonce) == self.crypto_box_NONCEBYTES
 
@@ -188,9 +208,8 @@ class CryptoBox():
 
 
 class CryptoScalarMult():
-    """ Ctypes wrapper around libubcrypt. Provides functions for generating
-    keypairs, encrypting/decrypting file-objects, or encrypting/decrypting
-    bytes instances. """
+    """ Ctypes wrapper around the crypto_scalarmult() functions from libcrypto
+    (which provides wrappers around NaCl functions/constants). """
 
     def __init__(self, libfile="./libcrypto.so"):
         dll = ctypes.cdll.LoadLibrary(libfile)
@@ -220,6 +239,11 @@ class CryptoScalarMult():
         self.dll = dll
 
     def crypto_scalarmult(self, scalar, element):
+        """ This function can be used to calculate a shared-secret one user's
+        secret key and another user's public key. Calculated shared-secret will
+        have the same value if calculated with the second user's secret key and
+        the first user's public key. """
+
         assert len(scalar) == self.crypto_scalarmult_SCALARBYTES
         assert len(element) == self.crypto_scalarmult_BYTES
 
@@ -233,6 +257,9 @@ class CryptoScalarMult():
         return buffer.raw
 
     def crypto_scalarmult_base(self, scalar):
+        """ This function can be used to calculate the public-key that
+        matches a secret key for some kinds NaCl operations. """
+
         assert len(scalar) == self.crypto_scalarmult_SCALARBYTES
 
         buffer = ctypes.create_string_buffer(self.crypto_scalarmult_BYTES)
@@ -246,9 +273,8 @@ class CryptoScalarMult():
 
 
 class CryptoSign():
-    """ Ctypes wrapper around libubcrypt. Provides functions for generating
-    keypairs, encrypting/decrypting file-objects, or encrypting/decrypting
-    bytes instances. """
+    """ Ctypes wrapper around the crypto_sign() functions from libcrypto
+    (which provides wrappers around NaCl functions/constants). """
 
     def __init__(self, libfile="./libcrypto.so"):
         dll = ctypes.cdll.LoadLibrary(libfile)
@@ -290,8 +316,8 @@ class CryptoSign():
         self.dll = dll
 
     def crypto_sign_keypair(self):
-        """Generates a ucbcrypt keypair as binary data. Returns the result as
-        a pair of bytes instances. """
+        """Generates a crypto_sign keypair as binary data. Returns the result
+        as a pair of bytes instances. """
 
         secret = ctypes.create_string_buffer(self.crypto_sign_SECRETKEYBYTES)
         public = ctypes.create_string_buffer(self.crypto_sign_PUBLICKEYBYTES)
@@ -304,6 +330,9 @@ class CryptoSign():
         return public.raw, secret.raw
 
     def crypto_sign(self, message, secret):
+        """ Signs a message using the sender's secret key. Returns a copy of
+        the message with a signature prepended. """
+
         assert len(secret) == self.crypto_sign_SECRETKEYBYTES
         buffer_length = len(message) + self.crypto_sign_BYTES
 
@@ -320,6 +349,9 @@ class CryptoSign():
         return buffer.raw[0:signed_size.value] 
 
     def crypto_sign_open(self, signed_message, public):
+        """ Verifies a signed message using the sender's public key. Returns a
+        copy of the message with the signature removed. """
+
         assert len(public) == self.crypto_sign_PUBLICKEYBYTES
 
         buffer = ctypes.create_string_buffer(len(signed_message))
@@ -335,3 +367,195 @@ class CryptoSign():
 
         return buffer.raw[0:message_size.value] 
 
+
+class CryptoSecretbox():
+    """ Ctypes wrapper around the crypto_secretbox() functions from libcrypto
+    (which provides wrappers around NaCl functions/constants). """
+
+    def __init__(self, libfile="./libcrypto.so"):
+        dll = ctypes.cdll.LoadLibrary(libfile)
+
+        constants = ['wrap_crypto_secretbox_KEYBYTES',
+                     'wrap_crypto_secretbox_NONCEBYTES',
+                     'wrap_crypto_secretbox_ZEROBYTES',
+                     'wrap_crypto_secretbox_BOXZEROBYTES']
+
+        uintptr_t = ctypes.POINTER(ctypes.c_uint)
+        for constant in constants:
+            attribute = ctypes.cast(getattr(dll, constant), uintptr_t).contents
+            dll.__dict__[constant] = attribute
+            self.__dict__[constant.replace("wrap_","")] = attribute.value
+
+        dll.wrap_crypto_secretbox.restype = ctypes.c_int
+        dll.wrap_crypto_secretbox.argtypes = (
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.c_ulonglong,
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.POINTER(ctypes.c_char)
+        )
+
+        dll.wrap_crypto_secretbox_open.restype = ctypes.c_int
+        dll.wrap_crypto_secretbox_open.argtypes = (
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.c_ulonglong,
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.POINTER(ctypes.c_char)
+        )
+
+        self.dll = dll
+
+    def crypto_secretbox_key(self):
+        """ Generates a random key for use with crypto_secretbox(). Note that
+        any random value will also work, assuming that it's the right size. """
+
+        iterator = range(self.crypto_secretbox_KEYBYTES)
+        key = bytes([random.randint(0,255) for x in iterator])
+        return key
+
+    def crypto_secretbox(self, plaintext, key, nonce=None):
+        """ Uses a secret key and a nonce to encrypt a block of data. """
+
+        if nonce is None:
+            iterator = range(self.crypto_secretbox_NONCEBYTES)
+            nonce = bytes([random.randint(0,255) for x in iterator])
+
+        assert len(key) == self.crypto_secretbox_KEYBYTES
+        assert len(nonce) == self.crypto_secretbox_NONCEBYTES
+
+        plaintext = bytes(self.crypto_secretbox_ZEROBYTES) + plaintext
+        buffer = ctypes.create_string_buffer(len(plaintext))
+
+        result = self.dll.wrap_crypto_secretbox(buffer, plaintext,
+                                                len(plaintext), nonce, key)
+
+        if result != 0:
+            errcode = "Crypto_secretbox() failed with exit-code %d" % result
+            raise ValueError(errcode)
+
+        return buffer.raw[self.crypto_secretbox_BOXZEROBYTES:], nonce
+
+    def crypto_secretbox_open(self, cypher, key, nonce):
+        """ Uses a secret key and a nonce to decrypt a block of data. """
+
+        assert len(key) == self.crypto_secretbox_KEYBYTES
+        assert len(nonce) == self.crypto_secretbox_NONCEBYTES
+
+        cypher = bytes(self.crypto_secretbox_BOXZEROBYTES) + cypher
+        buffer = ctypes.create_string_buffer(len(cypher))
+
+        result = self.dll.wrap_crypto_secretbox_open(buffer, cypher,
+                                                     len(cypher), nonce, key)
+
+        if result != 0:
+            errcode = "Crypto_secretbox() failed with exit-code %d" % result
+            raise ValueError(errcode)
+
+        return buffer.raw[self.crypto_secretbox_ZEROBYTES:]
+
+
+class CryptoStream():
+    """ Ctypes wrapper around the crypto_stream() functions from libcrypto
+    (which provides wrappers around NaCl functions/constants). """
+
+    def __init__(self, libfile="./libcrypto.so"):
+        dll = ctypes.cdll.LoadLibrary(libfile)
+
+        constants = ['wrap_crypto_stream_KEYBYTES',
+                     'wrap_crypto_stream_NONCEBYTES']
+
+        uintptr_t = ctypes.POINTER(ctypes.c_uint)
+        for constant in constants:
+            attribute = ctypes.cast(getattr(dll, constant), uintptr_t).contents
+            dll.__dict__[constant] = attribute
+            self.__dict__[constant.replace("wrap_","")] = attribute.value
+
+        dll.wrap_crypto_stream.restype = ctypes.c_int
+        dll.wrap_crypto_stream.argtypes = (
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.c_ulonglong,
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.POINTER(ctypes.c_char)
+        )
+
+        dll.wrap_crypto_stream_xor.restype = ctypes.c_int
+        dll.wrap_crypto_stream_xor.argtypes = (
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.c_ulonglong,
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.POINTER(ctypes.c_char)
+        )
+
+        self.dll = dll
+
+    @staticmethod
+    def _xor(block_a, block_b):
+        """ Returns the bitwise XOR of two blocks of bytes. """
+        assert len(block_a) == len(block_b)
+        return bytes([block_a[k] ^ block_b[k] for k in range(len(block_a))])
+
+    def crypto_stream_key(self):
+        """ Generates a random key for use with crypto_stream(). Note that any
+        random value will also work, assuming that it's the right size. """
+
+        iterator = range(self.crypto_stream_KEYBYTES)
+        key = bytes([random.randint(0,255) for x in iterator])
+        return key
+
+    def crypto_stream(self, length, key, nonce=None):
+        """ Creates a block of pseudorandom data of user-specified size, based
+        on a user-supplied key and nonce. """
+
+        if nonce is None:
+            iterator = range(self.crypto_stream_NONCEBYTES)
+            nonce = bytes([random.randint(0,255) for x in iterator])
+
+        assert len(key) == self.crypto_stream_KEYBYTES
+        assert len(nonce) == self.crypto_stream_NONCEBYTES
+
+        buffer = ctypes.create_string_buffer(length)
+        result = self.dll.wrap_crypto_stream(buffer, length, nonce, key)
+
+        if result != 0:
+            errcode = "Crypto_stream() failed with exit-code %d" % result
+            raise ValueError(errcode)
+
+        return buffer.raw, nonce
+
+    def crypto_stream_xor(self, data, key, nonce=None):
+        """ XORs a block of input data against pseudorandom data generated from
+        a user-supplied key and nonce. """
+
+        if nonce is None:
+            iterator = range(self.crypto_stream_NONCEBYTES)
+            nonce = bytes([random.randint(0,255) for x in iterator])
+
+        assert len(key) == self.crypto_stream_KEYBYTES
+        assert len(nonce) == self.crypto_stream_NONCEBYTES
+
+        buffer = ctypes.create_string_buffer(len(data))
+        result = self.dll.wrap_crypto_stream_xor(buffer, data, len(data),
+                                                 nonce, key)
+
+        if result != 0:
+            errcode = "Crypto_stream_xor() failed with exit-code %d" % result
+            raise ValueError(errcode)
+
+        return buffer.raw, nonce
+
+    def alt_crypto_stream_xor(self, data, key, nonce=None):
+        """ Alternative method to crypto_stream_xor(). Used to show how 
+        _crypto_stream_xor() can be constructed from crypto_stream() (and how
+        to verify that both work as intended). """
+
+        if nonce is None:
+            iterator = range(self.crypto_stream_NONCEBYTES)
+            nonce = bytes([random.randint(0,255) for x in iterator])
+
+        assert len(key) == self.crypto_stream_KEYBYTES
+        assert len(nonce) == self.crypto_stream_NONCEBYTES
+
+        stream = q.crypto_stream(len(msg), key, nonce)[0]
+        return self._xor(stream, data), nonce
