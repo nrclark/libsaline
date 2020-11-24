@@ -1,7 +1,7 @@
 /randombytes_config.h
-/*.o
+*.o
 *.d
-/crypto_*
+*.so
+*.a
 /deps/
 /include/
-/libtweetnacl.a
