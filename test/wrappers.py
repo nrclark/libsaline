@@ -557,5 +557,251 @@ class CryptoStream():
         assert len(key) == self.crypto_stream_KEYBYTES
         assert len(nonce) == self.crypto_stream_NONCEBYTES
 
-        stream = q.crypto_stream(len(msg), key, nonce)[0]
+        stream = self.crypto_stream(len(data), key, nonce)[0]
         return self._xor(stream, data), nonce
+
+
+
+
+
+int wrap_crypto_auth_verify(const unsigned char *auth, const unsigned char *msg,
+                            unsigned long long length, const unsigned char *key)
+{
+    return crypto_auth_verify(auth, msg, length, key);
+}
+
+
+class CryptoAuth():
+    """ Ctypes wrapper around the crypto_auth() functions from libcrypto
+    (which provides wrappers around NaCl functions/constants). """
+
+    def __init__(self, libfile="./libcrypto.so"):
+        dll = ctypes.cdll.LoadLibrary(libfile)
+
+        constants = ['wrap_crypto_auth_KEYBYTES',
+                     'wrap_crypto_auth_BYTES']
+
+        uintptr_t = ctypes.POINTER(ctypes.c_uint)
+        for constant in constants:
+            attribute = ctypes.cast(getattr(dll, constant), uintptr_t).contents
+            dll.__dict__[constant] = attribute
+            self.__dict__[constant.replace("wrap_","")] = attribute.value
+
+        dll.wrap_crypto_auth.restype = ctypes.c_int
+        dll.wrap_crypto_auth.argtypes = (
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.c_ulonglong,
+            ctypes.POINTER(ctypes.c_char)
+        )
+
+        dll.wrap_crypto_auth_verify.restype = ctypes.c_int
+        dll.wrap_crypto_auth_verify.argtypes = (
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.c_ulonglong,
+            ctypes.POINTER(ctypes.c_char)
+        )
+
+        self.dll = dll
+
+    def crypto_auth_key(self):
+        """ Generates a random key for use with crypto_auth(). Note that any
+        random value will also work, assuming that it's the right size. """
+
+        iterator = range(self.crypto_auth_KEYBYTES)
+        key = bytes([random.randint(0,255) for x in iterator])
+        return key
+
+    def crypto_auth(self, message, key):
+        """ Use a shared secret key to generate an authenticator/signature that
+        can be used to validate a message's integrity and sender. """
+
+        assert len(key) == self.crypto_auth_KEYBYTES
+
+        buffer = ctypes.create_string_buffer(self.crypto_auth_BYTES)
+        result = self.dll.wrap_crypto_auth(buffer, message, len(message), key)
+
+        if result != 0:
+            errcode = "Crypto_auth() failed with exit-code %d" % result
+            raise ValueError(errcode)
+
+        return buffer.raw
+
+    def crypto_auth_verify(self, message, authenticator, key, throw=True):
+        """ Use a shared secret key to generate an authenticator/signature that
+        can be used to validate a message's integrity and sender. """
+
+        assert len(key) == self.crypto_auth_KEYBYTES
+        assert len(authenticator) == self.crypto_auth_BYTES
+
+        result = self.dll.wrap_crypto_auth_verify(authenticator, message,
+                                                  len(message), key)
+
+        if throw is False:
+            return result == 0
+
+        if result != 0:
+            errcode = "Crypto_auth_verify() failed with exit-code %d"
+            raise ValueError(errcode % result)
+
+
+class CryptoOnetimeauth():
+    """ Ctypes wrapper around the crypto_onetimeauth() functions from libcrypto
+    (which provides wrappers around NaCl functions/constants). """
+
+    def __init__(self, libfile="./libcrypto.so"):
+        dll = ctypes.cdll.LoadLibrary(libfile)
+
+        constants = ['wrap_crypto_onetimeauth_KEYBYTES',
+                     'wrap_crypto_onetimeauth_BYTES']
+
+        uintptr_t = ctypes.POINTER(ctypes.c_uint)
+        for constant in constants:
+            attribute = ctypes.cast(getattr(dll, constant), uintptr_t).contents
+            dll.__dict__[constant] = attribute
+            self.__dict__[constant.replace("wrap_","")] = attribute.value
+
+        dll.wrap_crypto_onetimeauth.restype = ctypes.c_int
+        dll.wrap_crypto_onetimeauth.argtypes = (
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.c_ulonglong,
+            ctypes.POINTER(ctypes.c_char)
+        )
+
+        dll.wrap_crypto_onetimeauth_verify.restype = ctypes.c_int
+        dll.wrap_crypto_onetimeauth_verify.argtypes = (
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.c_ulonglong,
+            ctypes.POINTER(ctypes.c_char)
+        )
+
+        self.dll = dll
+
+    def crypto_onetimeauth_key(self):
+        """ Generates a random key for use with crypto_onetimeauth(). Note that
+        any random value will also work, assuming that it's the right size. """
+
+        iterator = range(self.crypto_onetimeauth_KEYBYTES)
+        key = bytes([random.randint(0,255) for x in iterator])
+        return key
+
+    def crypto_onetimeauth(self, message, key):
+        """ Use a shared secret key to generate an authenticator/signature that
+        can be used to validate a message's integrity and sender.
+        
+        This is similar to the functionality of crypto_auth(), but uses a less
+        secure algorithm. Keys should never be reused with this function."""
+
+        assert len(key) == self.crypto_onetimeauth_KEYBYTES
+
+        buffer = ctypes.create_string_buffer(self.crypto_onetimeauth_BYTES)
+        result = self.dll.wrap_crypto_onetimeauth(buffer, message,
+                                                  len(message), key)
+
+        if result != 0:
+            errcode = "Crypto_onetimeauth() failed with exit-code %d" % result
+            raise ValueError(errcode)
+
+        return buffer.raw
+
+    def crypto_onetimeauth_verify(self, message, authenticator, key,
+                                  throw=True):
+        """ Use a shared secret key to generate an authenticator/signature that
+        can be used to validate a message's integrity and sender. """
+
+        assert len(key) == self.crypto_onetimeauth_KEYBYTES
+        assert len(authenticator) == self.crypto_onetimeauth_BYTES
+
+        result = self.dll.wrap_crypto_onetimeauth_verify(authenticator, message,
+                                                         len(message), key)
+
+        if throw is False:
+            return result == 0
+
+        if result != 0:
+            errcode = "Crypto_onetimeauth_verify() failed with exit-code %d"
+            raise ValueError(errcode % result)
+
+
+class CryptoMisc():
+    """ Ctypes wrapper around the crypto_onetimeauth() functions from libcrypto
+    (which provides wrappers around NaCl functions/constants). """
+
+    def __init__(self, libfile="./libcrypto.so"):
+        dll = ctypes.cdll.LoadLibrary(libfile)
+
+        constants = ['wrap_crypto_hash_BYTES']
+
+        uintptr_t = ctypes.POINTER(ctypes.c_uint)
+        for constant in constants:
+            attribute = ctypes.cast(getattr(dll, constant), uintptr_t).contents
+            dll.__dict__[constant] = attribute
+            self.__dict__[constant.replace("wrap_","")] = attribute.value
+
+        dll.wrap_crypto_hash.restype = ctypes.c_int
+        dll.wrap_crypto_hash.argtypes = (
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.c_ulonglong
+        )
+
+        dll.wrap_crypto_verify_16.restype = ctypes.c_int
+        dll.wrap_crypto_verify_16.argtypes = (
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.POINTER(ctypes.c_char)
+        )
+
+        dll.wrap_crypto_verify_32.restype = ctypes.c_int
+        dll.wrap_crypto_verify_32.argtypes = (
+            ctypes.POINTER(ctypes.c_char),
+            ctypes.POINTER(ctypes.c_char)
+        )
+
+        self.dll = dll
+
+    def crypto_hash(self, message):
+        """ Calculates the sha512sum of an input message. """
+
+        buffer = ctypes.create_string_buffer(self.crypto_hash_BYTES)
+        result = self.dll.wrap_crypto_hash(buffer, message, len(message))
+
+        if result != 0:
+            errcode = "Crypto_hash() failed with exit-code %d" % result
+            raise ValueError(errcode)
+
+        return buffer.raw
+
+    def crypto_verify_16(self, block_a, block_b, throw=True):
+        """ Use a shared secret key to generate an authenticator/signature that
+        can be used to validate a message's integrity and sender. """
+
+        assert len(block_a) == 16
+        assert len(block_b) == 16
+
+        result = self.dll.wrap_crypto_verify_16(block_a, block_b)
+
+        if throw is False:
+            return result == 0
+
+        if result != 0:
+            errcode = "Crypto_verify_16() failed with exit-code %d"
+            raise ValueError(errcode % result)
+
+    def crypto_verify_32(self, block_a, block_b, throw=True):
+        """ Use a shared secret key to generate an authenticator/signature that
+        can be used to validate a message's integrity and sender. """
+
+        assert len(block_a) == 32
+        assert len(block_b) == 32
+
+        result = self.dll.wrap_crypto_verify_32(block_a, block_b)
+
+        if throw is False:
+            return result == 0
+
+        if result != 0:
+            errcode = "Crypto_verify_32() failed with exit-code %d"
+            raise ValueError(errcode % result)
