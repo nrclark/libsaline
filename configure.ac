@@ -10,7 +10,7 @@ AC_SUBST([LIB_RELEASE],[SEMANTIC_VERSION])
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
-AC_CONFIG_SRCDIR([randombytes.h])
+AC_CONFIG_SRCDIR([src/tweetnacl.h])
 AC_CONFIG_HEADERS([config.h])
 
 #------------------------- Init Automake / Autoconf  --------------------------#
@@ -52,7 +52,6 @@ AC_TYPE_SIZE_T
 
 AC_DEFUN([AC_REQUIRE_HEADER], [AC_CHECK_HEADER([$1],,
          [AC_MSG_ERROR([Missing header "$1" required for '$2'.])])])
-
 
 # Checks to make sure that a function is present. Throws a MSG_ERROR if missing.
 AC_DEFUN([AC_REQUIRE_FUNCTION], [AC_CHECK_FUNC([$1],,
@@ -124,9 +123,11 @@ AS_CASE($rand_source,
 
      [])
 
-
-
 #------------------------------ Generate Outputs ------------------------------#
 
-AC_CONFIG_FILES([Makefile])
+AH_TOP([#ifndef __CONFIG_H__
+#define __CONFIG_H__])
+AH_BOTTOM([#endif])
+
+AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT

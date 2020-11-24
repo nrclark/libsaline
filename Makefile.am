@@ -1,6 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4 --install
 
-lib_LTLIBRARIES = libtweetnacl.la
-libtweetnacl_la_SOURCES = randombytes.c tweetnacl.c
-include_HEADERS = randombytes.h tweetnacl.h
-libtweetnacl_la_LDFLAGS = -release @LIB_RELEASE@
+include $(top_srcdir)/man/Makefile.am
+
+EXTRA_DIST = LICENSE README.md VERSION autogen.sh
+
+SUBDIRS = src

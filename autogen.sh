@@ -1,4 +1,4 @@
 #!/bin/sh
 set -e
 autoreconf -i
-automake --add-missing
+automake --add-missing --include-deps
