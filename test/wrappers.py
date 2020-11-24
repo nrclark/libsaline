@@ -2,9 +2,11 @@
 """ Ctypes wrappers around various groups of functions/constants from the
 libcrypto NaCL wrapper, which should be compiled externally. """
 
-import copy
+#pylint: disable=no-member
+
 import ctypes
 import random
+
 
 class CryptoBox():
     """ Ctypes wrapper around the crypto_box() functions from libcrypto (which
@@ -16,15 +18,15 @@ class CryptoBox():
         constants = ['wrap_crypto_box_PUBLICKEYBYTES',
                      'wrap_crypto_box_SECRETKEYBYTES',
                      'wrap_crypto_box_NONCEBYTES',
-                     'wrap_crypto_box_ZEROBYTES', 
-                     'wrap_crypto_box_BOXZEROBYTES', 
+                     'wrap_crypto_box_ZEROBYTES',
+                     'wrap_crypto_box_BOXZEROBYTES',
                      'wrap_crypto_box_BEFORENMBYTES']
 
         uintptr_t = ctypes.POINTER(ctypes.c_uint)
         for constant in constants:
             attribute = ctypes.cast(getattr(dll, constant), uintptr_t).contents
             dll.__dict__[constant] = attribute
-            self.__dict__[constant.replace("wrap_","")] = attribute.value
+            self.__dict__[constant.replace("wrap_", "")] = attribute.value
 
         dll.wrap_crypto_box_keypair.restype = ctypes.c_int
         dll.wrap_crypto_box_keypair.argtypes = (
@@ -99,7 +101,7 @@ class CryptoBox():
 
         if nonce is None:
             iterator = range(self.crypto_box_NONCEBYTES)
-            nonce = bytes([random.randint(0,255) for x in iterator])
+            nonce = bytes([random.randint(0, 255) for x in iterator])
 
         assert len(public) == self.crypto_box_PUBLICKEYBYTES
         assert len(secret) == self.crypto_box_SECRETKEYBYTES
@@ -144,7 +146,7 @@ class CryptoBox():
         and another user's secret key. The result is supplied to
         crypto_box_afternm() or crypto_box_open_afternm() to get the equivalent
         of crypto_box() or crypto_box_open().
-        
+
         Used to provide a computational speedup in applications where there
         will be repeated calls that use the same keysets. """
 
@@ -166,7 +168,7 @@ class CryptoBox():
 
         if nonce is None:
             iterator = range(self.crypto_box_NONCEBYTES)
-            nonce = bytes([random.randint(0,255) for x in iterator])
+            nonce = bytes([random.randint(0, 255) for x in iterator])
 
         assert len(shared) == self.crypto_box_BEFORENMBYTES
         assert len(nonce) == self.crypto_box_NONCEBYTES
@@ -221,7 +223,7 @@ class CryptoScalarMult():
         for constant in constants:
             attribute = ctypes.cast(getattr(dll, constant), uintptr_t).contents
             dll.__dict__[constant] = attribute
-            self.__dict__[constant.replace("wrap_","")] = attribute.value
+            self.__dict__[constant.replace("wrap_", "")] = attribute.value
 
         dll.wrap_crypto_scalarmult.restype = ctypes.c_int
         dll.wrap_crypto_scalarmult.argtypes = (
@@ -287,7 +289,7 @@ class CryptoSign():
         for constant in constants:
             attribute = ctypes.cast(getattr(dll, constant), uintptr_t).contents
             dll.__dict__[constant] = attribute
-            self.__dict__[constant.replace("wrap_","")] = attribute.value
+            self.__dict__[constant.replace("wrap_", "")] = attribute.value
 
         dll.wrap_crypto_sign_keypair.restype = ctypes.c_int
         dll.wrap_crypto_sign_keypair.argtypes = (
@@ -340,13 +342,13 @@ class CryptoSign():
         signed_size = ctypes.c_ulonglong(0)
 
         result = self.dll.wrap_crypto_sign(buffer, ctypes.byref(signed_size),
-                                    message, len(message), secret)
+                                           message, len(message), secret)
 
         if result != 0:
             errcode = "Crypto_sign() failed with exit-code %d" % result
             raise ValueError(errcode)
 
-        return buffer.raw[0:signed_size.value] 
+        return buffer.raw[0:signed_size.value]
 
     def crypto_sign_open(self, signed_message, public):
         """ Verifies a signed message using the sender's public key. Returns a
@@ -365,7 +367,7 @@ class CryptoSign():
             errcode = "Crypto_sign_open() failed with exit-code %d" % result
             raise ValueError(errcode)
 
-        return buffer.raw[0:message_size.value] 
+        return buffer.raw[0:message_size.value]
 
 
 class CryptoSecretbox():
@@ -384,7 +386,7 @@ class CryptoSecretbox():
         for constant in constants:
             attribute = ctypes.cast(getattr(dll, constant), uintptr_t).contents
             dll.__dict__[constant] = attribute
-            self.__dict__[constant.replace("wrap_","")] = attribute.value
+            self.__dict__[constant.replace("wrap_", "")] = attribute.value
 
         dll.wrap_crypto_secretbox.restype = ctypes.c_int
         dll.wrap_crypto_secretbox.argtypes = (
@@ -411,7 +413,7 @@ class CryptoSecretbox():
         any random value will also work, assuming that it's the right size. """
 
         iterator = range(self.crypto_secretbox_KEYBYTES)
-        key = bytes([random.randint(0,255) for x in iterator])
+        key = bytes([random.randint(0, 255) for x in iterator])
         return key
 
     def crypto_secretbox(self, plaintext, key, nonce=None):
@@ -419,7 +421,7 @@ class CryptoSecretbox():
 
         if nonce is None:
             iterator = range(self.crypto_secretbox_NONCEBYTES)
-            nonce = bytes([random.randint(0,255) for x in iterator])
+            nonce = bytes([random.randint(0, 255) for x in iterator])
 
         assert len(key) == self.crypto_secretbox_KEYBYTES
         assert len(nonce) == self.crypto_secretbox_NONCEBYTES
@@ -469,7 +471,7 @@ class CryptoStream():
         for constant in constants:
             attribute = ctypes.cast(getattr(dll, constant), uintptr_t).contents
             dll.__dict__[constant] = attribute
-            self.__dict__[constant.replace("wrap_","")] = attribute.value
+            self.__dict__[constant.replace("wrap_", "")] = attribute.value
 
         dll.wrap_crypto_stream.restype = ctypes.c_int
         dll.wrap_crypto_stream.argtypes = (
@@ -501,7 +503,7 @@ class CryptoStream():
         random value will also work, assuming that it's the right size. """
 
         iterator = range(self.crypto_stream_KEYBYTES)
-        key = bytes([random.randint(0,255) for x in iterator])
+        key = bytes([random.randint(0, 255) for x in iterator])
         return key
 
     def crypto_stream(self, length, key, nonce=None):
@@ -510,7 +512,7 @@ class CryptoStream():
 
         if nonce is None:
             iterator = range(self.crypto_stream_NONCEBYTES)
-            nonce = bytes([random.randint(0,255) for x in iterator])
+            nonce = bytes([random.randint(0, 255) for x in iterator])
 
         assert len(key) == self.crypto_stream_KEYBYTES
         assert len(nonce) == self.crypto_stream_NONCEBYTES
@@ -530,7 +532,7 @@ class CryptoStream():
 
         if nonce is None:
             iterator = range(self.crypto_stream_NONCEBYTES)
-            nonce = bytes([random.randint(0,255) for x in iterator])
+            nonce = bytes([random.randint(0, 255) for x in iterator])
 
         assert len(key) == self.crypto_stream_KEYBYTES
         assert len(nonce) == self.crypto_stream_NONCEBYTES
@@ -546,29 +548,19 @@ class CryptoStream():
         return buffer.raw, nonce
 
     def alt_crypto_stream_xor(self, data, key, nonce=None):
-        """ Alternative method to crypto_stream_xor(). Used to show how 
+        """ Alternative method to crypto_stream_xor(). Used to show how
         _crypto_stream_xor() can be constructed from crypto_stream() (and how
         to verify that both work as intended). """
 
         if nonce is None:
             iterator = range(self.crypto_stream_NONCEBYTES)
-            nonce = bytes([random.randint(0,255) for x in iterator])
+            nonce = bytes([random.randint(0, 255) for x in iterator])
 
         assert len(key) == self.crypto_stream_KEYBYTES
         assert len(nonce) == self.crypto_stream_NONCEBYTES
 
         stream = self.crypto_stream(len(data), key, nonce)[0]
         return self._xor(stream, data), nonce
-
-
-
-
-
-int wrap_crypto_auth_verify(const unsigned char *auth, const unsigned char *msg,
-                            unsigned long long length, const unsigned char *key)
-{
-    return crypto_auth_verify(auth, msg, length, key);
-}
 
 
 class CryptoAuth():
@@ -585,7 +577,7 @@ class CryptoAuth():
         for constant in constants:
             attribute = ctypes.cast(getattr(dll, constant), uintptr_t).contents
             dll.__dict__[constant] = attribute
-            self.__dict__[constant.replace("wrap_","")] = attribute.value
+            self.__dict__[constant.replace("wrap_", "")] = attribute.value
 
         dll.wrap_crypto_auth.restype = ctypes.c_int
         dll.wrap_crypto_auth.argtypes = (
@@ -610,7 +602,7 @@ class CryptoAuth():
         random value will also work, assuming that it's the right size. """
 
         iterator = range(self.crypto_auth_KEYBYTES)
-        key = bytes([random.randint(0,255) for x in iterator])
+        key = bytes([random.randint(0, 255) for x in iterator])
         return key
 
     def crypto_auth(self, message, key):
@@ -645,6 +637,8 @@ class CryptoAuth():
             errcode = "Crypto_auth_verify() failed with exit-code %d"
             raise ValueError(errcode % result)
 
+        return 0
+
 
 class CryptoOnetimeauth():
     """ Ctypes wrapper around the crypto_onetimeauth() functions from libcrypto
@@ -660,7 +654,7 @@ class CryptoOnetimeauth():
         for constant in constants:
             attribute = ctypes.cast(getattr(dll, constant), uintptr_t).contents
             dll.__dict__[constant] = attribute
-            self.__dict__[constant.replace("wrap_","")] = attribute.value
+            self.__dict__[constant.replace("wrap_", "")] = attribute.value
 
         dll.wrap_crypto_onetimeauth.restype = ctypes.c_int
         dll.wrap_crypto_onetimeauth.argtypes = (
@@ -685,13 +679,13 @@ class CryptoOnetimeauth():
         any random value will also work, assuming that it's the right size. """
 
         iterator = range(self.crypto_onetimeauth_KEYBYTES)
-        key = bytes([random.randint(0,255) for x in iterator])
+        key = bytes([random.randint(0, 255) for x in iterator])
         return key
 
     def crypto_onetimeauth(self, message, key):
         """ Use a shared secret key to generate an authenticator/signature that
         can be used to validate a message's integrity and sender.
-        
+
         This is similar to the functionality of crypto_auth(), but uses a less
         secure algorithm. Keys should never be reused with this function."""
 
@@ -715,8 +709,8 @@ class CryptoOnetimeauth():
         assert len(key) == self.crypto_onetimeauth_KEYBYTES
         assert len(authenticator) == self.crypto_onetimeauth_BYTES
 
-        result = self.dll.wrap_crypto_onetimeauth_verify(authenticator, message,
-                                                         len(message), key)
+        result = self.dll.wrap_crypto_onetimeauth_verify(
+            authenticator, message, len(message), key)
 
         if throw is False:
             return result == 0
@@ -725,10 +719,11 @@ class CryptoOnetimeauth():
             errcode = "Crypto_onetimeauth_verify() failed with exit-code %d"
             raise ValueError(errcode % result)
 
+        return 0
+
 
 class CryptoMisc():
-    """ Ctypes wrapper around the crypto_onetimeauth() functions from libcrypto
-    (which provides wrappers around NaCl functions/constants). """
+    """ Ctypes wrapper around NaCl's other miscellaneous functions. """
 
     def __init__(self, libfile="./libcrypto.so"):
         dll = ctypes.cdll.LoadLibrary(libfile)
@@ -739,7 +734,7 @@ class CryptoMisc():
         for constant in constants:
             attribute = ctypes.cast(getattr(dll, constant), uintptr_t).contents
             dll.__dict__[constant] = attribute
-            self.__dict__[constant.replace("wrap_","")] = attribute.value
+            self.__dict__[constant.replace("wrap_", "")] = attribute.value
 
         dll.wrap_crypto_hash.restype = ctypes.c_int
         dll.wrap_crypto_hash.argtypes = (
@@ -790,6 +785,8 @@ class CryptoMisc():
             errcode = "Crypto_verify_16() failed with exit-code %d"
             raise ValueError(errcode % result)
 
+        return 0
+
     def crypto_verify_32(self, block_a, block_b, throw=True):
         """ Use a shared secret key to generate an authenticator/signature that
         can be used to validate a message's integrity and sender. """
@@ -805,3 +802,5 @@ class CryptoMisc():
         if result != 0:
             errcode = "Crypto_verify_32() failed with exit-code %d"
             raise ValueError(errcode % result)
+
+        return 0
