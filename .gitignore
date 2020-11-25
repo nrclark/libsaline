@@ -14,8 +14,9 @@ config.log
 config.status
 configure
 libtool
-src/.deps/
-src/.libs/
+.deps/
+.libs/
+.dirstamp
 *.la
 *.lo
 stamp-h1

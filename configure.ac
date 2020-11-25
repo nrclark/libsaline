@@ -29,6 +29,8 @@ AM_PROG_AR
 AM_PROG_LIBTOOL
 LT_INIT
 
+AC_ENABLE_SHARED
+
 # Checks for header files.
 AC_CHECK_HEADERS([stdint.h])
 
