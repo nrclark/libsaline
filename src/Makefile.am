@@ -2,27 +2,33 @@ ACLOCAL_AMFLAGS = -I m4 --install
 AUTOMAKE_OPTIONS = subdir-objects
 
 lib_LTLIBRARIES = libtweetnacl.la
-libtweetnacl_la_SOURCES = randombytes.c tweetnacl.c
+libtweetnacl_la_SOURCES = randombytes.c tweetnacl.c tweetnacl_auth.c
 
 include_HEADERS = randombytes.h tweetnacl.h
 libtweetnacl_la_LDFLAGS = -release @LIB_RELEASE@
 
-libcryptosodium_la_SOURCES = \
+cryptosodium_la_SOURCES = \
     test/crypto_box_wrapper.c test/crypto_auth_wrapper.c \
     test/crypto_misc_wrapper.c test/crypto_onetimeauth_wrapper.c \
     test/crypto_scalarmult_wrapper.c test/crypto_secretbox_wrapper.c \
     test/crypto_sign_wrapper.c test/crypto_stream_wrapper.c
 
-libcryptotweet_la_SOURCES = \
+cryptotweet_la_SOURCES = \
     test/crypto_box_wrapper.c test/crypto_auth_wrapper.c \
     test/crypto_misc_wrapper.c test/crypto_onetimeauth_wrapper.c \
     test/crypto_scalarmult_wrapper.c test/crypto_secretbox_wrapper.c \
-    test/crypto_sign_wrapper.c test/crypto_stream_wrapper.c
+    test/crypto_sign_wrapper.c test/crypto_stream_wrapper.c \
+    $(libtweetnacl_la_SOURCES)
 
-libcryptosodium_la_LDFLAGS = -rpath /foo $(AM_LDFLAGS)
-libcryptotweet_la_LDFLAGS = -rpath /foo $(AM_LDFLAGS)
+cryptotweet_la_CFLAGS = -D USE_TWEETNACL $(AM_LDFLAGS)
 
-libcryptosodium_la_LIBADD = -lsodium
-libcryptotweet_la_LIBADD = libtweetnacl.la
+cryptosodium_la_LDFLAGS = -module -avoid-version -rpath / $(AM_LDFLAGS)
+cryptotweet_la_LDFLAGS = -module -avoid-version -rpath / $(AM_LDFLAGS)
 
-check_LTLIBRARIES = libcryptosodium.la libcryptotweet.la
+cryptosodium_la_LIBADD = -lsodium
+
+check_LTLIBRARIES = cryptosodium.la cryptotweet.la
+
+check: cryptosodium.la cryptotweet.la
+	echo "TEST"
+	echo $^
