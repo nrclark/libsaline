@@ -8,6 +8,7 @@ Makefile.in
 aclocal.m4
 autom4te.cache/
 build-aux/
+__pycache__/
 config.h
 config.h.in
 config.log
