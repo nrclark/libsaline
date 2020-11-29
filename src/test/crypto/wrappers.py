@@ -770,8 +770,8 @@ class CryptoMisc():
         return buffer.raw
 
     def crypto_verify_16(self, block_a, block_b, throw=True):
-        """ Use a shared secret key to generate an authenticator/signature that
-        can be used to validate a message's integrity and sender. """
+        """ Verifies whether two 16-byte blocks of data are identical. Does it
+        in constant-time in all cases. """
 
         assert len(block_a) == 16
         assert len(block_b) == 16
@@ -788,8 +788,8 @@ class CryptoMisc():
         return 0
 
     def crypto_verify_32(self, block_a, block_b, throw=True):
-        """ Use a shared secret key to generate an authenticator/signature that
-        can be used to validate a message's integrity and sender. """
+        """ Verifies whether two 32-byte blocks of data are identical. Does it
+        in constant-time in all cases. """
 
         assert len(block_a) == 32
         assert len(block_b) == 32

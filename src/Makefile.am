@@ -29,6 +29,5 @@ cryptosodium_la_LIBADD = -lsodium
 
 check_LTLIBRARIES = cryptosodium.la cryptotweet.la
 
-check: cryptosodium.la cryptotweet.la
-	echo "TEST"
-	echo $^
+check: $(srcdir)/test/test_crypto.py
+	LD_LIBRARY_PATH=$(builddir)/.libs python3 $<

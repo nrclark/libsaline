@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+""" Wrappers around the full NaCl API, provided by tweetnacl and by libsodium.
+Provides a friendly way to compare the performance and correctness of tweetnacl
+as it goes through refactoring. """
+
 import argparse
 from . import wrappers
 
@@ -21,28 +26,5 @@ Sodium.auth = wrappers.CryptoAuth(libfile = "cryptosodium.so")
 Sodium.onetimeauth = wrappers.CryptoOnetimeauth(libfile = "cryptosodium.so")
 Sodium.misc = wrappers.CryptoMisc(libfile = "cryptosodium.so")
 
-"""
-TweetNacl = {
-    'box': wrappers.CryptoBox(libfile="cryptotweet.so"),
-    'scalarmult': wrappers.CryptoScalarMult(libfile="cryptotweet.so"),
-    'sign': wrappers.CryptoSign(libfile="cryptotweet.so"),
-    'secretbox': wrappers.CryptoSecretbox(libfile="cryptotweet.so"),
-    'stream': wrappers.CryptoStream(libfile="cryptotweet.so"),
-    'auth': wrappers.CryptoAuth(libfile="cryptotweet.so"),
-    'onetimeauth': wrappers.CryptoOnetimeauth(libfile="cryptotweet.so"),
-    'misc': wrappers.CryptoMisc(libfile="cryptotweet.so")
-}
-
-Sodium = {
-    'box': wrappers.CryptoBox(libfile="cryptosodium.so"),
-    'scalarmult': wrappers.CryptoScalarMult(libfile="cryptosodium.so"),
-    'sign': wrappers.CryptoSign(libfile="cryptosodium.so"),
-    'secretbox': wrappers.CryptoSecretbox(libfile="cryptosodium.so"),
-    'stream': wrappers.CryptoStream(libfile="cryptosodium.so"),
-    'auth': wrappers.CryptoAuth(libfile="cryptosodium.so"),
-    'onetimeauth': wrappers.CryptoOnetimeauth(libfile="cryptosodium.so"),
-    'misc': wrappers.CryptoMisc(libfile="cryptosodium.so")
-}
-"""
-del(argparse)
-del(wrappers)
+del argparse
+del wrappers
