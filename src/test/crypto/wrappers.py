@@ -357,17 +357,17 @@ class CryptoSign():
         assert len(public) == self.crypto_sign_PUBLICKEYBYTES
 
         buffer = ctypes.create_string_buffer(len(signed_message))
-        message_size = ctypes.c_ulonglong(0)
+        length = ctypes.c_ulonglong(0)
 
-        result = self.dll.crypto_sign_open(buffer, ctypes.byref(message_size),
-                                           signed_message, len(signed_message),
-                                           public)
+        result = self.dll.wrap_crypto_sign_open(buffer, ctypes.byref(length),
+                                                signed_message,
+                                                len(signed_message), public)
 
         if result != 0:
             errcode = "Crypto_sign_open() failed with exit-code %d" % result
             raise ValueError(errcode)
 
-        return buffer.raw[0:message_size.value]
+        return buffer.raw[0:length.value]
 
 
 class CryptoSecretbox():

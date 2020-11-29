@@ -174,7 +174,7 @@ def main():
 
     # Pure tweetnacl
     tweetnacl_keys = generate_keys(crypto.TweetNacl)
-    tweetnacl_data = generate_data(crypto.Sodium, tweetnacl_keys)
+    tweetnacl_data = generate_data(crypto.TweetNacl, tweetnacl_keys)
     verify_data(crypto.TweetNacl, tweetnacl_data, tweetnacl_keys)
 
     print("All tests passed OK.")
