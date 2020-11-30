@@ -1,3 +1,4 @@
+*.tweet.c
 *.o
 *.d
 *.so

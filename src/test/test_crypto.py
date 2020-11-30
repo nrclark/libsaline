@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+""" Test suite that uses the 'crypto' wrappers for comparing tweetnacl's
+behavior against libsodium. """
 
 import random
 import crypto
-
 
 def random_message(length):
     """ Generates a block of random bytes of a user-specified length. """
@@ -33,6 +34,7 @@ def generate_keys(source):
 def generate_data(source, keys):
     """ Generates a set of test data using a pre-existing batch of keys. Uses
     the crypto-variant provided in 'source'. """
+    # pylint: disable=too-many-locals
 
     data = {}
     msg = random_message(2**16 + 5)
@@ -89,6 +91,7 @@ def generate_data(source, keys):
 def verify_data(source, data, keys):
     """ Verifies a block of generated data using a batch of pre-existing keys.
     Crypto libraries are accessed using the wrapper provided by 'source'. """
+    # pylint: disable=too-many-locals,too-many-statements
 
     # Crypto-box verification.
     secret = keys['box']['sender']['secret']
@@ -97,35 +100,35 @@ def verify_data(source, data, keys):
     msg = data['box']['msg']
     cypher = data['box']['cypher']
     readback = source.box.crypto_box(msg, public, secret, nonce)[0]
-    assert(readback == cypher)
+    assert readback == cypher
 
     secret = keys['box']['receiver']['secret']
     public = keys['box']['sender']['public']
     shared = data['box']['shared']
     afternm = data['box']['afternm']
-    assert(afternm == cypher)
+    assert afternm == cypher
     readback = source.box.crypto_box_open(cypher, public, secret, nonce)
-    assert(readback == data['box']['msg'])
+    assert readback == data['box']['msg']
 
     readback = source.box.crypto_box_open_afternm(afternm, shared, nonce)
-    assert(readback == data['box']['msg'])
+    assert readback == data['box']['msg']
 
     # Crypto scalarmult verification.
     secret = keys['box']['receiver']['secret']
     public = keys['box']['receiver']['public']
-    assert(public == source.scalarmult.crypto_scalarmult_base(secret))
+    assert public == source.scalarmult.crypto_scalarmult_base(secret)
 
     scalar = data['scalarmult']['scalar']
     element = data['scalarmult']['element']
     mult = data['scalarmult']['mult']
-    assert(mult == source.scalarmult.crypto_scalarmult(scalar, element))
+    assert mult == source.scalarmult.crypto_scalarmult(scalar, element)
 
     # Crypto sign verification.
     msg = data['sign']['msg']
     signed = data['sign']['signed']
-    assert(signed == source.sign.crypto_sign(msg, keys['sign']['secret']))
+    assert signed == source.sign.crypto_sign(msg, keys['sign']['secret'])
     readback = source.sign.crypto_sign_open(signed, keys['sign']['public'])
-    assert(readback == msg)
+    assert readback == msg
 
     # Crypto secretbox verification.
     nonce = data['secretbox']['nonce']
@@ -134,8 +137,8 @@ def verify_data(source, data, keys):
     cypher = data['secretbox']['cypher']
 
     readback = source.secretbox.crypto_secretbox(msg, key, nonce)[0]
-    assert(readback == data['secretbox']['cypher'])
-    assert(msg == source.secretbox.crypto_secretbox_open(cypher, key, nonce))
+    assert readback == data['secretbox']['cypher']
+    assert msg == source.secretbox.crypto_secretbox_open(cypher, key, nonce)
 
     # Crypto stream verification.
     alt = data['stream']['alt']
@@ -143,18 +146,18 @@ def verify_data(source, data, keys):
     length = data['stream']['length']
     nonce = data['stream']['nonce']
     msg = data['stream']['msg']
-    assert(alt == cypher)
+    assert alt == cypher
     stream = source.stream.crypto_stream(length, keys['stream'], nonce)[0]
 
-    assert(len(stream) == length)
-    assert(stream == data['stream']['stream'])
+    assert len(stream) == length
+    assert stream == data['stream']['stream']
     readback = source.stream.crypto_stream_xor(msg, keys['stream'], nonce)[0]
-    assert(readback == cypher)
+    assert readback == cypher
 
     # Crypto auth verification.
     msg = data['auth']['msg']
     readback = source.auth.crypto_auth(msg, keys['auth'])
-    assert(readback == data['auth']['auth'])
+    assert readback == data['auth']['auth']
     source.auth.crypto_auth_verify(msg, data['auth']['auth'], keys['auth'])
 
     # Crypto onetimeauth verification.
@@ -162,20 +165,27 @@ def verify_data(source, data, keys):
     auth = data['onetimeauth']['auth']
     key = keys['onetimeauth']
     readback = source.onetimeauth.crypto_onetimeauth(msg, key)
-    assert(readback == auth)
+    assert readback == auth
     source.onetimeauth.crypto_onetimeauth_verify(msg, auth, key)
 
 
 def main():
-    # Pure libsodium
-    sodium_keys = generate_keys(crypto.Sodium)
-    sodium_data = generate_data(crypto.Sodium, sodium_keys)
-    verify_data(crypto.Sodium, sodium_data, sodium_keys)
+    """ Cycle through all permutations of key-generation, data-generation,
+    and data verification by tweetnacl and libsodium. If this test passes,
+    then tweetnacl and libsodium are assumed to be fully cross-compatible. """
 
-    # Pure tweetnacl
-    tweetnacl_keys = generate_keys(crypto.TweetNacl)
-    tweetnacl_data = generate_data(crypto.TweetNacl, tweetnacl_keys)
-    verify_data(crypto.TweetNacl, tweetnacl_data, tweetnacl_keys)
+    for key_source in (crypto.TweetNacl, crypto.Sodium):
+        for data_source in (crypto.TweetNacl, crypto.Sodium):
+            for verify_source in (crypto.TweetNacl, crypto.Sodium):
+                # pylint: disable=protected-access
+                print("====================================")
+                print("Key source:   ", key_source.auth.dll._name)
+                print("Data source:  ", data_source.auth.dll._name)
+                print("Verification: ", verify_source.auth.dll._name)
+                keys = generate_keys(key_source)
+                data = generate_data(data_source, keys)
+                verify_data(verify_source, data, keys)
+                print("Tests passed OK.")
 
     print("All tests passed OK.")
 
