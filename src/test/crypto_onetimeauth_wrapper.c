@@ -1,5 +1,5 @@
 #ifdef USE_TWEETNACL
-#include "tweetnacl.new.h"
+#include "tweetnacl.h"
 #else
 #include <sodium/crypto_onetimeauth.h>
 #endif
