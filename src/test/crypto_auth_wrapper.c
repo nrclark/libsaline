@@ -4,6 +4,8 @@
 #include <sodium/crypto_auth.h>
 #endif
 
+#include "crypto_wrappers.h"
+
 const unsigned int wrap_crypto_auth_KEYBYTES = crypto_auth_KEYBYTES;
 const unsigned int wrap_crypto_auth_BYTES = crypto_auth_BYTES;
 

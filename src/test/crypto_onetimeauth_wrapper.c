@@ -2,7 +2,9 @@
 #include "tweetnacl.new.h"
 #else
 #include <sodium/crypto_onetimeauth.h>
-#endif 
+#endif
+
+#include "crypto_wrappers.h"
 
 const unsigned int wrap_crypto_onetimeauth_KEYBYTES = \
     crypto_onetimeauth_KEYBYTES;

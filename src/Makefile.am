@@ -37,7 +37,7 @@ cryptotweet_la_SOURCES = \
     test/crypto_secretbox_wrapper.tweet.c test/crypto_sign_wrapper.tweet.c \
     test/crypto_stream_wrapper.tweet.c $(libtweetnacl_la_SOURCES)
 
-cryptotweet_la_CFLAGS = -D USE_TWEETNACL $(AM_LDFLAGS)
+cryptotweet_la_CFLAGS = -D USE_TWEETNACL $(AM_CFLAGS)
 cryptotweet_la_LDFLAGS = -module -avoid-version -rpath / $(AM_LDFLAGS)
 
 #------------------------------------------------------------------------------#

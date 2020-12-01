@@ -2,7 +2,9 @@
 #include "tweetnacl.new.h"
 #else
 #include <sodium/crypto_stream.h>
-#endif 
+#endif
+
+#include "crypto_wrappers.h"
 
 const unsigned int wrap_crypto_stream_KEYBYTES = crypto_stream_KEYBYTES;
 const unsigned int wrap_crypto_stream_NONCEBYTES = crypto_stream_NONCEBYTES;

@@ -2,7 +2,9 @@
 #include "tweetnacl.new.h"
 #else
 #include <sodium/crypto_scalarmult.h>
-#endif 
+#endif
+
+#include "crypto_wrappers.h"
 
 const unsigned int wrap_crypto_scalarmult_BYTES = \
     crypto_scalarmult_BYTES;

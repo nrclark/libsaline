@@ -4,7 +4,9 @@
 #include <sodium/crypto_hash.h>
 #include <sodium/crypto_verify_16.h>
 #include <sodium/crypto_verify_32.h>
-#endif 
+#endif
+
+#include "crypto_wrappers.h"
 
 const unsigned int wrap_crypto_hash_BYTES = crypto_hash_BYTES;
 

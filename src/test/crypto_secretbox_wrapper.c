@@ -2,7 +2,9 @@
 #include "tweetnacl.new.h"
 #else
 #include <sodium/crypto_secretbox.h>
-#endif 
+#endif
+
+#include "crypto_wrappers.h"
 
 const unsigned int wrap_crypto_secretbox_KEYBYTES = \
     crypto_secretbox_KEYBYTES;
