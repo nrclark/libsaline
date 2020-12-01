@@ -4,6 +4,7 @@
 typedef int64_t gf[16];
 
 extern void randombytes(uint8_t *, uint64_t);
+void crypto_hashblocks(uint8_t *x, const uint8_t *m, uint64_t n);
 
 static const uint8_t _0[16] = {0};
 static const uint8_t _9[32] = {9};
@@ -190,14 +191,14 @@ static int crypto_stream_salsa20_xor(uint8_t *c, const uint8_t *m, uint64_t b,
         crypto_core_salsa20(x, z, k, sigma);
 
         for (i = 0; i < 64; ++i) {
-            c[i] = (m ? m[i] : 0) ^ x[i];
+            c[i] = (uint8_t) ((m ? m[i] : 0) ^ x[i]);
         }
 
         u = 1;
 
         for (i = 8; i < 16; ++i) {
-            u += (uint32_t)z[i];
-            z[i] = u;
+            u += (uint32_t) z[i];
+            z[i] = (uint8_t) u;
             u >>= 8;
         }
 
@@ -213,7 +214,7 @@ static int crypto_stream_salsa20_xor(uint8_t *c, const uint8_t *m, uint64_t b,
         crypto_core_salsa20(x, z, k, sigma);
 
         for (i = 0; i < b; ++i) {
-            c[i] = (m ? m[i] : 0) ^ x[i];
+            c[i] = (uint8_t) ((m ? m[i] : 0) ^ x[i]);
         }
     }
 
@@ -346,7 +347,7 @@ int crypto_onetimeauth(unsigned char *out, const unsigned char *m,
     add1305(h, c);
 
     for (j = 0; j < 16; ++j) {
-        out[j] = h[j];
+        out[j] = (uint8_t) h[j];
     }
 
     return 0;
@@ -467,8 +468,8 @@ static void pack25519(uint8_t *o, const gf n)
     }
 
     for (i = 0; i < 16; ++i) {
-        o[2 * i] = t[i] & 0xff;
-        o[2 * i + 1] = t[i] >> 8;
+        o[2 * i] = (uint8_t) (t[i]);
+        o[2 * i + 1] = (uint8_t) (t[i] >> 8);
     }
 }
 
@@ -602,7 +603,7 @@ int crypto_scalarmult(unsigned char *q, const unsigned char *n,
         z[i] = n[i];
     }
 
-    z[31] = (n[31] & 127) | 64;
+    z[31] = (uint8_t) ((n[31] & 127U) | 64);
     z[0] &= 248;
     unpack25519(x, p);
 
@@ -615,8 +616,8 @@ int crypto_scalarmult(unsigned char *q, const unsigned char *n,
 
     for (i = 254; i >= 0; --i) {
         r = (z[i >> 3] >> (i & 7)) & 1;
-        sel25519(a, b, r);
-        sel25519(c, d, r);
+        sel25519(a, b, (int) r);
+        sel25519(c, d, (int) r);
         A(e, a, c);
         Z(a, a, c);
         A(c, b, d);
@@ -635,8 +636,8 @@ int crypto_scalarmult(unsigned char *q, const unsigned char *n,
         M(a, d, f);
         M(d, b, x);
         S(b, e);
-        sel25519(a, b, r);
-        sel25519(c, d, r);
+        sel25519(a, b, (int) r);
+        sel25519(c, d, (int) r);
     }
 
     for (i = 0; i < 16; ++i) {
@@ -768,7 +769,7 @@ static const uint64_t K[80] = {
     0x5fcb6fab3ad6faecULL, 0x6c44198c4a475817ULL
 };
 
-int crypto_hashblocks(uint8_t *x, const uint8_t *m, uint64_t n)
+void crypto_hashblocks(uint8_t *x, const uint8_t *m, uint64_t n)
 {
     uint64_t z[8], b[8], a[8], w[16], t;
     int i, j;
@@ -815,8 +816,6 @@ int crypto_hashblocks(uint8_t *x, const uint8_t *m, uint64_t n)
     for (i = 0; i < 8; ++i) {
         ts64(x + 8 * i, z[i]);
     }
-
-    return n;
 }
 
 static const uint8_t iv[64] = {
@@ -854,7 +853,7 @@ int crypto_hash(unsigned char *out, const unsigned char *m,
     x[n] = 128;
 
     n = 256 - 128 * (n < 112);
-    x[n - 9] = b >> 61;
+    x[n - 9] = (uint8_t) (b >> 61);
     ts64(x + n - 8, b << 3);
     crypto_hashblocks(h, x, n);
 
@@ -906,7 +905,7 @@ static void pack(uint8_t *r, gf p[4])
     M(tx, p[0], zi);
     M(ty, p[1], zi);
     pack25519(r, ty);
-    r[31] ^= par25519(tx) << 7;
+    r[31] ^= (uint8_t) (par25519(tx) << 7);
 }
 
 static void scalarmult(gf p[4], gf q[4], const uint8_t *s)
@@ -972,7 +971,7 @@ static void modL(uint8_t *r, int64_t x[64])
         carry = 0;
 
         for (j = i - 32; j < i - 12; ++j) {
-            x[j] += carry - 16 * x[i] * L[j - (i - 32)];
+            x[j] += carry - 16 * x[i] * (int64_t) L[j - (i - 32)];
             carry = (x[j] + 128) >> 8;
             x[j] -= carry << 8;
         }
@@ -984,18 +983,18 @@ static void modL(uint8_t *r, int64_t x[64])
     carry = 0;
 
     for (j = 0; j < 32; ++j) {
-        x[j] += carry - (x[31] >> 4) * L[j];
+        x[j] += carry - (x[31] >> 4) * (int64_t) L[j];
         carry = x[j] >> 8;
         x[j] &= 255;
     }
 
     for (j = 0; j < 32; ++j) {
-        x[j] -= carry * L[j];
+        x[j] -= carry * (int64_t) L[j];
     }
 
     for (i = 0; i < 32; ++i) {
         x[i + 1] += x[i] >> 8;
-        r[i] = x[i] & 255;
+        r[i] = (uint8_t) x[i];
     }
 }
 
@@ -1004,7 +1003,7 @@ static void reduce(uint8_t *r)
     int64_t x[64], i;
 
     for (i = 0; i < 64; ++i) {
-        x[i] = (uint64_t)r[i];
+        x[i] = (uint64_t) r[i];
     }
 
     for (i = 0; i < 64; ++i) {
@@ -1059,7 +1058,7 @@ int crypto_sign(unsigned char *sm, unsigned long long *smlen,
 
     for (int i = 0; i < 32; ++i) {
         for (int j = 0; j < 32; ++j) {
-            x[i + j] += h[i] * (uint64_t)d[j];
+            x[i + j] += h[i] * (int64_t) d[j];
         }
     }
 
@@ -1119,7 +1118,7 @@ int crypto_sign_open(unsigned char *m, unsigned long long *mlen,
     uint8_t t[32], h[64];
     gf p[4], q[4];
 
-    *mlen = -1;
+    *mlen = (unsigned long long) (-1);
 
     if (n < 64) {
         return -1;

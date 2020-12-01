@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "tweetnacl.new.h"
 
-extern int crypto_hashblocks(uint8_t *x, const uint8_t *m, uint64_t n);
+extern void crypto_hashblocks(uint8_t *x, const uint8_t *m, uint64_t n);
 
 int crypto_auth_verify(const unsigned char *h, const unsigned char *in,
                        unsigned long long inlen, const unsigned char *k)
