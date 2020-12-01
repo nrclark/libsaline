@@ -93,6 +93,60 @@ AC_ARG_WITH([rand],
             [rand_source=$withval],
             [AC_GUESS_RAND])
 
+AX_CREATE_ENABLE_HELP_SECTION([Features to enable])
+AX_MAKE_ENABLE_OPT([sanitizers], [no], [Build with GCC sanitizers enabled])
+AX_MAKE_ENABLE_OPT([lint], [no], [Build with every warning GCC can emit])
+AX_MAKE_ENABLE_OPT([warnings], [yes], [Build with -Wall -Wextra -pedantic])
+AX_MAKE_ENABLE_OPT([werror], [yes], [Build with -Werror])
+
+#---------------------- Configure For Optional Sanitizers  --------------------#
+
+CONFIGURE_SCRIPT_DIR="`dirname $0`"
+AS_IF([test "x$enable_lint" = xno], [], [
+  AX_ENABLE_CFLAGS([-std=c99])
+  AX_ENABLE_EVERY_WARNING([-Wtraditional -Wtraditional-conversion -Wabi
+                           -Wold-style-definition -Wstrict-prototypes
+                           -Wsystem-headers -Wunused-macros])
+])
+
+AS_IF([test "x$enable_warnings" = xno], [], [
+  AX_ENABLE_CFLAGS([
+    -Wall
+    -Wextra
+    -pedantic
+  ])
+])
+
+AS_IF([test "x$enable_sanitizers" = xno], [], [
+  AX_ENABLE_CFLAGS([
+    -O0
+    -g
+    -fstack-protector-strong
+    -fstack-protector-all
+    -fsanitize=shift
+    -fsanitize=undefined
+    -fsanitize=address
+    -fsanitize=alignment
+    -fsanitize=bool
+    -fsanitize=bounds
+    -fsanitize=bounds-strict
+    -fsanitize=enum
+    -fsanitize=float-cast-overflow
+    -fsanitize=float-divide-by-zero
+    -fsanitize=integer-divide-by-zero
+    -fsanitize=null
+    -fsanitize=object-size
+    -fno-sanitize-recover=all
+    -fsanitize=return
+    -fsanitize=returns-nonnull-attribute
+    -fsanitize=signed-integer-overflow
+  ])
+])
+
+AS_IF([test "x$enable_werror" = xno], [], [
+  AS_VAR_APPEND([CFLAGS],[" -Werror"])
+])
+
 #-------------------- Place rand() selection into config.h  -------------------#
 
 AS_CASE($rand_source,
@@ -110,6 +164,7 @@ AS_CASE($rand_source,
      [AC_MSG_ERROR([Unknown value for --with-rand: '$rand_source'.])])
 
 #------------------------ Confirm Rand() Requirements  ------------------------#
+
 
 AS_CASE($rand_source,
      [*random],
