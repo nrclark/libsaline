@@ -6,7 +6,7 @@ enum {
     crypto_auth_KEYBYTES = 32
 };
 
-int crypto_auth(unsigned char *,const unsigned char *, unsigned long long,
+int crypto_auth(unsigned char *, const unsigned char *, unsigned long long,
                 const unsigned char *);
 
 int crypto_auth_verify(const unsigned char *, const unsigned char *,

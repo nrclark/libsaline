@@ -1,7 +1,7 @@
+#include <stdint.h>
 #include "tweetnacl.new.h"
 
-extern int crypto_hashblocks(unsigned char *, const unsigned char *,
-                             unsigned long long);
+extern int crypto_hashblocks(uint8_t *x, const uint8_t *m, uint64_t n);
 
 int crypto_auth_verify(const unsigned char *h, const unsigned char *in,
                        unsigned long long inlen, const unsigned char *k)
@@ -25,18 +25,17 @@ int crypto_auth(unsigned char *out, const unsigned char *in,
 {
     unsigned char h[64];
     unsigned char padded[256];
-    int i;
-    unsigned long long bytes = 128 + inlen;
+    uint64_t bytes = 128 + inlen;
 
-    for (i = 0; i < 64; ++i) {
+    for (unsigned int i = 0; i < 64; ++i) {
         h[i] = iv[i];
     }
 
-    for (i = 0; i < 32; ++i) {
+    for (unsigned int i = 0; i < 32; ++i) {
         padded[i] = k[i] ^ 0x36;
     }
 
-    for (i = 32; i < 128; ++i) {
+    for (unsigned int i = 32; i < 128; ++i) {
         padded[i] = 0x36;
     }
 
@@ -46,61 +45,61 @@ int crypto_auth(unsigned char *out, const unsigned char *in,
     inlen &= 127;
     in -= inlen;
 
-    for (i = 0; i < inlen; ++i) {
+    for (unsigned long long i = 0; i < inlen; ++i) {
         padded[i] = in[i];
     }
 
     padded[inlen] = 0x80;
 
     if (inlen < 112) {
-        for (i = inlen + 1; i < 119; ++i) {
+        for (unsigned int i = (unsigned int) inlen + 1; i < 119; ++i) {
             padded[i] = 0;
         }
 
-        padded[119] = bytes >> 61;
-        padded[120] = bytes >> 53;
-        padded[121] = bytes >> 45;
-        padded[122] = bytes >> 37;
-        padded[123] = bytes >> 29;
-        padded[124] = bytes >> 21;
-        padded[125] = bytes >> 13;
-        padded[126] = bytes >> 5;
-        padded[127] = bytes << 3;
+        padded[119] = (unsigned char) (bytes >> 61);
+        padded[120] = (unsigned char) (bytes >> 53);
+        padded[121] = (unsigned char) (bytes >> 45);
+        padded[122] = (unsigned char) (bytes >> 37);
+        padded[123] = (unsigned char) (bytes >> 29);
+        padded[124] = (unsigned char) (bytes >> 21);
+        padded[125] = (unsigned char) (bytes >> 13);
+        padded[126] = (unsigned char) (bytes >> 5);
+        padded[127] = (unsigned char) (bytes << 3);
         crypto_hashblocks(h, padded, 128);
     } else {
-        for (i = inlen + 1; i < 247; ++i) {
+        for (unsigned int i = (unsigned int) inlen + 1; i < 247; ++i) {
             padded[i] = 0;
         }
 
-        padded[247] = bytes >> 61;
-        padded[248] = bytes >> 53;
-        padded[249] = bytes >> 45;
-        padded[250] = bytes >> 37;
-        padded[251] = bytes >> 29;
-        padded[252] = bytes >> 21;
-        padded[253] = bytes >> 13;
-        padded[254] = bytes >> 5;
-        padded[255] = bytes << 3;
+        padded[247] = (unsigned char) (bytes >> 61);
+        padded[248] = (unsigned char) (bytes >> 53);
+        padded[249] = (unsigned char) (bytes >> 45);
+        padded[250] = (unsigned char) (bytes >> 37);
+        padded[251] = (unsigned char) (bytes >> 29);
+        padded[252] = (unsigned char) (bytes >> 21);
+        padded[253] = (unsigned char) (bytes >> 13);
+        padded[254] = (unsigned char) (bytes >> 5);
+        padded[255] = (unsigned char) (bytes << 3);
         crypto_hashblocks(h, padded, 256);
     }
 
-    for (i = 0; i < 32; ++i) {
+    for (unsigned int i = 0; i < 32; ++i) {
         padded[i] = k[i] ^ 0x5c;
     }
 
-    for (i = 32; i < 128; ++i) {
+    for (unsigned int i = 32; i < 128; ++i) {
         padded[i] = 0x5c;
     }
 
-    for (i = 0; i < 64; ++i) {
+    for (unsigned int i = 0; i < 64; ++i) {
         padded[128 + i] = h[i];
     }
 
-    for (i = 0; i < 64; ++i) {
+    for (unsigned int i = 0; i < 64; ++i) {
         h[i] = iv[i];
     }
 
-    for (i = 64; i < 128; ++i) {
+    for (unsigned int i = 64; i < 128; ++i) {
         padded[128 + i] = 0;
     }
 
@@ -109,7 +108,7 @@ int crypto_auth(unsigned char *out, const unsigned char *in,
 
     crypto_hashblocks(h, padded, 256);
 
-    for (i = 0; i < 32; ++i) {
+    for (unsigned int i = 0; i < 32; ++i) {
         out[i] = h[i];
     }
 

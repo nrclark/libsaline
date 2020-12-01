@@ -37,8 +37,8 @@ static inline void randombytes_rand_device(uint8_t *output, uint64_t length,
     }
 
     while (length > 0) {
-        uint32_t chunk = (length < 1048576) ? length : 1048576;
-        uint32_t count = read(fd, output, chunk);
+        uint32_t chunk = (length < 1048576) ? (uint32_t) length : 1048576;
+        ssize_t count = read(fd, output, chunk);
 
         if (count < 1) {
             sleep(1);
@@ -46,7 +46,7 @@ static inline void randombytes_rand_device(uint8_t *output, uint64_t length,
         }
 
         output += count;
-        length -= count;
+        length -= (size_t) count;
     }
 }
 
