@@ -4,9 +4,9 @@ ACLOCAL_AMFLAGS = -I m4 --install
 AUTOMAKE_OPTIONS = subdir-objects
 
 lib_LTLIBRARIES = libtweetnacl.la
-libtweetnacl_la_SOURCES = randombytes.c tweetnacl.c tweetnacl_auth.c
+libtweetnacl_la_SOURCES = randombytes.c tweetnacl.new.c tweetnacl_auth.new.c
 
-include_HEADERS = randombytes.h tweetnacl.h
+include_HEADERS = randombytes.h tweetnacl.new.h
 libtweetnacl_la_LDFLAGS = -release @LIB_RELEASE@
 
 #------------------------------------------------------------------------------#

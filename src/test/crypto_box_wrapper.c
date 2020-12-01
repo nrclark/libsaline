@@ -1,8 +1,8 @@
 #ifdef USE_TWEETNACL
-#include "tweetnacl.h"
+#include "tweetnacl.new.h"
 #else
 #include <sodium/crypto_box.h>
-#endif 
+#endif
 
 const unsigned int wrap_crypto_box_PUBLICKEYBYTES = crypto_box_PUBLICKEYBYTES;
 const unsigned int wrap_crypto_box_SECRETKEYBYTES = crypto_box_SECRETKEYBYTES;

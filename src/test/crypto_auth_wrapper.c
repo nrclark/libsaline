@@ -1,8 +1,8 @@
 #ifdef USE_TWEETNACL
-#include "tweetnacl.h"
+#include "tweetnacl.new.h"
 #else
 #include <sodium/crypto_auth.h>
-#endif 
+#endif
 
 const unsigned int wrap_crypto_auth_KEYBYTES = crypto_auth_KEYBYTES;
 const unsigned int wrap_crypto_auth_BYTES = crypto_auth_BYTES;
