@@ -41,7 +41,7 @@ This library is presented as a standard GNU Autotools project. All of the usual 
 
 1. (If running from a Git clone) Run `./autogen.sh` to build the configure script
    and its inputs. Not necessary if running from a `make dist`-generated source
-   tarball.
+   tarball, which will already include a `configure` script.
 
 2. Run `./configure` to configure the build, or run it from a custom build
    directory. Add `--enable-sodium=no` to disable libsodium compatibility
