@@ -7,14 +7,12 @@ checks.
 It's also verified to be compatible with libsodium's implementation
 of the NaCl API.
 
-## Differences from saline ##
+## Differences from Tweetnacl ##
 
-Libsaline's internal workings are identical to tweetnacl-20140427.
-No code structure was changed, nor were any algorithms or values.
+Libsaline is forked from tweetnacl-20140427. There are a number of changes
+and improvements. The changes of interest are:
 
-The changes of interest are:
-
-1. Cleaned up saline's macro-soup. Header and functions are clearly defined
+1. Cleaned up tweetnacl's macro-soup. Header and functions are clearly defined
    now.
 
 2. Replace #defined constants with enums.
@@ -35,7 +33,28 @@ The changes of interest are:
 
 8. Autotoolized the library for easy integration with common build-systems.
 
-9. Relicensed the library as LGPLv2.1.
+9. Relicense the library with an ISC license.
+
+## Comparison to Libsodium ##
+
+Libsodium is a great library, written and maintained by sharp people. If your
+project can use libsodium, that'll almost certainly be the right choice for
+you.
+
+Libsodium isn't the right fit for all software projects though. It's hard to
+embed in a custom codebase, and it's not well very suited for bare-metal
+applications.
+
+Libsaline is minimalistic and very portable, and is suitable for use in places
+where libsodium doesn't fit well for whatever reason. Libsaline's performance
+is performance is much lower than libsodium, but it's also a much smaller
+codebase with a focus on portability.
+
+Libsaline doesn't provide all of the functions available with libsodium, but it
+does fully implement the original NaCl API. A comprehensive test suite verifies
+that libsaline's provided functions are all libsodium-compatible. So if your
+project can compile against libsaline, then it can also compile against
+libsodium without changing anything other than the include files.
 
 ## Build Instructions ##
 
@@ -53,6 +72,9 @@ suspects will work fine.
 3. Build using `make` and install using `make install`. Set a `DESTDIR` during
    `make install` if needed.
 
+Alternatively, you can just grab the files you need and pull them into your
+design.
+
 ## Current Status ##
 
 At the current time, this work is believed complete. All warnings have been
@@ -62,7 +84,7 @@ fully autotoolized and looks like it works well.
 
 ## License ##
 
-Saline's original release was under a public-domain license, released by
-Daniel Bernstein. This release is relicensed under LGPLv2.1 for easy
+Libsaline's original release was under a public-domain license, released by
+Daniel Bernstein. This release is relicensed with an ISC license for easy
 collaboration, and to reflect the work done improving public-domain
-saline's code quality into something reasonable.
+tweetnacl's code quality into something reasonable.
