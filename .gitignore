@@ -1,5 +1,5 @@
 *.tar.gz
-*.tweet.c
+*.saline.c
 *.o
 *.d
 *.so

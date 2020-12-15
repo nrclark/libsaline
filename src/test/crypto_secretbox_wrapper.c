@@ -1,5 +1,5 @@
-#ifdef USE_TWEETNACL
-#include "tweetnacl.h"
+#ifdef USE_SALINE
+#include "saline.h"
 #else
 #include <sodium/crypto_secretbox.h>
 #endif

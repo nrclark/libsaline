@@ -3,13 +3,13 @@
 ACLOCAL_AMFLAGS = -I m4 --install
 AUTOMAKE_OPTIONS = subdir-objects
 
-lib_LTLIBRARIES = libtweetnacl.la
-libtweetnacl_la_SOURCES = randombytes.c tweetnacl.c tweetnacl_auth.c
+lib_LTLIBRARIES = libsaline.la
+libsaline_la_SOURCES = randombytes.c saline.c saline_auth.c
 
-include_HEADERS = randombytes.h tweetnacl.h
-libtweetnacl_la_LDFLAGS = -release @LIB_RELEASE@
+include_HEADERS = randombytes.h saline.h
+libsaline_la_LDFLAGS = -release @LIB_RELEASE@
 
-check_LTLIBRARIES = cryptotweet.la
+check_LTLIBRARIES = cryptosaline.la
 
 #------------------------------------------------------------------------------#
 
@@ -28,23 +28,23 @@ endif
 
 #------------------------------------------------------------------------------#
 
-SUFFIXES = .tweet.c
+SUFFIXES = .saline.c
 
-.c.tweet.c:
+.c.saline.c:
 	cp $< $@
 
 clean-local:
-	rm -f test/*.tweet.c
+	rm -f test/*.saline.c
 
-cryptotweet_la_SOURCES = \
-    test/crypto_box_wrapper.tweet.c test/crypto_auth_wrapper.tweet.c \
-    test/crypto_misc_wrapper.tweet.c test/crypto_onetimeauth_wrapper.tweet.c \
-    test/crypto_scalarmult_wrapper.tweet.c \
-    test/crypto_secretbox_wrapper.tweet.c test/crypto_sign_wrapper.tweet.c \
-    test/crypto_stream_wrapper.tweet.c $(libtweetnacl_la_SOURCES)
+cryptosaline_la_SOURCES = \
+    test/crypto_box_wrapper.saline.c test/crypto_auth_wrapper.saline.c \
+    test/crypto_misc_wrapper.saline.c test/crypto_onetimeauth_wrapper.saline.c \
+    test/crypto_scalarmult_wrapper.saline.c \
+    test/crypto_secretbox_wrapper.saline.c test/crypto_sign_wrapper.saline.c \
+    test/crypto_stream_wrapper.saline.c $(libsaline_la_SOURCES)
 
-cryptotweet_la_CFLAGS = -D USE_TWEETNACL $(AM_CFLAGS)
-cryptotweet_la_LDFLAGS = -module -avoid-version -rpath / $(AM_LDFLAGS)
+cryptosaline_la_CFLAGS = -D USE_SALINE $(AM_CFLAGS)
+cryptosaline_la_LDFLAGS = -module -avoid-version -rpath / $(AM_LDFLAGS)
 
 #------------------------------------------------------------------------------#
 

@@ -1,5 +1,5 @@
-#ifndef TWEETNACL_H
-#define TWEETNACL_H
+#ifndef SALINE_H
+#define SALINE_H
 
 enum {
     crypto_auth_BYTES = 32,

@@ -3,14 +3,14 @@
 
 m4_include([m4/semantic_version.m4])
 SEMANTIC_VERSION_SET_FILE([VERSION])
-AC_INIT([libtweetnacl], SEMANTIC_VERSION, [nicholas.clark@gmail.com])
+AC_INIT([libsaline], SEMANTIC_VERSION, [nicholas.clark@gmail.com])
 AC_SUBST([LIB_RELEASE],[SEMANTIC_VERSION])
 
 #------------------------ Configure Source Locations  -------------------------#
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
-AC_CONFIG_SRCDIR([src/tweetnacl.h])
+AC_CONFIG_SRCDIR([src/saline.h])
 AC_CONFIG_HEADERS([config.h])
 
 #------------------------- Init Automake / Autoconf  --------------------------#
@@ -38,15 +38,10 @@ AC_CHECK_HEADERS([stdint.h])
 AC_C_INLINE
 AC_TYPE_UINT64_T
 AC_TYPE_UINT32_T
-AC_TYPE_UINT16_T
 AC_TYPE_UINT8_T
-
 AC_TYPE_INT64_T
-AC_TYPE_INT32_T
-AC_TYPE_INT16_T
-AC_TYPE_INT8_T
 
-AC_TYPE_SIZE_T
+AC_TYPE_SSIZE_T
 
 #--------------------------- Custom Autoconf Macros  --------------------------#
 
@@ -173,7 +168,6 @@ AS_CASE($rand_source,
      [AC_MSG_ERROR([Unknown value for --with-rand: '$rand_source'.])])
 
 #------------------------ Confirm Rand() Requirements  ------------------------#
-
 
 AS_CASE($rand_source,
      [*random],

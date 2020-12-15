@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-""" Wrappers around the full NaCl API, provided by tweetnacl and by libsodium.
-Provides a friendly way to compare the performance and correctness of tweetnacl
+""" Wrappers around the full NaCl API, provided by saline and by libsodium.
+Provides a friendly way to compare the performance and correctness of saline
 as it goes through refactoring. """
 
 import sys
@@ -18,16 +18,16 @@ _choices = [x for x in _choices if os.path.exists(x)]
 _config = json.loads(open(_choices[0]).read())
 _HAVE_LIBSODIUM = _config['have_libsodium'] == 'yes'
 
-TweetNacl = argparse.Namespace()
-TweetNacl.box = wrappers.CryptoBox(libfile = "cryptotweet.so")
-TweetNacl.scalarmult = wrappers.CryptoScalarMult(libfile = "cryptotweet.so")
-TweetNacl.sign = wrappers.CryptoSign(libfile = "cryptotweet.so")
-TweetNacl.secretbox = wrappers.CryptoSecretbox(libfile = "cryptotweet.so")
-TweetNacl.stream = wrappers.CryptoStream(libfile = "cryptotweet.so")
-TweetNacl.auth = wrappers.CryptoAuth(libfile = "cryptotweet.so")
-TweetNacl.onetimeauth = wrappers.CryptoOnetimeauth(libfile = "cryptotweet.so")
-TweetNacl.misc = wrappers.CryptoMisc(libfile = "cryptotweet.so")
-Providers = [TweetNacl]
+Saline = argparse.Namespace()
+Saline.box = wrappers.CryptoBox(libfile = "cryptosaline.so")
+Saline.scalarmult = wrappers.CryptoScalarMult(libfile = "cryptosaline.so")
+Saline.sign = wrappers.CryptoSign(libfile = "cryptosaline.so")
+Saline.secretbox = wrappers.CryptoSecretbox(libfile = "cryptosaline.so")
+Saline.stream = wrappers.CryptoStream(libfile = "cryptosaline.so")
+Saline.auth = wrappers.CryptoAuth(libfile = "cryptosaline.so")
+Saline.onetimeauth = wrappers.CryptoOnetimeauth(libfile = "cryptosaline.so")
+Saline.misc = wrappers.CryptoMisc(libfile = "cryptosaline.so")
+Providers = [Saline]
 
 if _HAVE_LIBSODIUM:
     Sodium = argparse.Namespace()

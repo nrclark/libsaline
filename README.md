@@ -7,14 +7,14 @@ checks.
 It's also verified to be compatible with libsodium's implementation
 of the NaCl API.
 
-## Differences from tweetnacl ##
+## Differences from saline ##
 
-Libtweetnacl's internal workings are identical to tweetnacl-20140427.
+Libsaline's internal workings are identical to tweetnacl-20140427.
 No code structure was changed, nor were any algorithms or values.
 
 The changes of interest are:
 
-1. Cleaned up tweetnacl's macro-soup. Header and functions are clearly defined
+1. Cleaned up saline's macro-soup. Header and functions are clearly defined
    now.
 
 2. Replace #defined constants with enums.
@@ -29,7 +29,7 @@ The changes of interest are:
    compatible with libsodium.
 
 6. Added a configurable implementation of randombytes(), which
-   is needed by tweetnacl.
+   is needed by saline.
 
 7. Added a thorough testbench that verifies libsodium compatibility.
 
@@ -62,7 +62,7 @@ fully autotoolized and looks like it works well.
 
 ## License ##
 
-Tweetnacl's original release was under a public-domain license, released by
+Saline's original release was under a public-domain license, released by
 Daniel Bernstein. This release is relicensed under LGPLv2.1 for easy
 collaboration, and to reflect the work done improving public-domain
-tweetnacl's code quality into something reasonable.
+saline's code quality into something reasonable.

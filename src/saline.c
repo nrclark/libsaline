@@ -1,4 +1,4 @@
-#include "tweetnacl.h"
+#include "saline.h"
 #include <stdint.h>
 
 typedef int64_t gf[16];

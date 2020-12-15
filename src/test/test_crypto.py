@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""" Test suite that uses the 'crypto' wrappers for comparing tweetnacl's
+""" Test suite that uses the 'crypto' wrappers for comparing saline's
 behavior against libsodium. """
 
 import sys
@@ -75,8 +75,8 @@ def generate_reference(outfile=sys.stdout):
     """ Generates a set of keys and some reference data. Encodes all values to
     base64 and writes the result as JSON to outfile. """
 
-    keys = generate_keys(crypto.TweetNacl)
-    data = generate_data(crypto.TweetNacl, keys, 2**9)
+    keys = generate_keys(crypto.Saline)
+    data = generate_data(crypto.Saline, keys, 2**9)
     export_data = parse_dict({"keys": keys, "data": data})
     export_data = json.dumps(export_data, indent=2)
 
@@ -424,8 +424,8 @@ def verify_data(source, data, keys):
 
 def main():
     """ Cycle through all permutations of key-generation, data-generation,
-    and data verification by tweetnacl and libsodium. If this test passes,
-    then tweetnacl and libsodium are assumed to be fully cross-compatible. """
+    and data verification by saline and libsodium. If this test passes,
+    then saline and libsodium are assumed to be fully cross-compatible. """
 
     script_dir = os.path.dirname(os.path.realpath(__file__))
     reference_file = os.path.join(script_dir, "reference.json")

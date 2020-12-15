@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "tweetnacl.h"
+#include "saline.h"
 
 extern void crypto_hashblocks(uint8_t *x, const uint8_t *m, uint64_t n);
 
