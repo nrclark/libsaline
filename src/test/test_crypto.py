@@ -10,10 +10,80 @@ import base64
 import random
 import crypto
 
+#------------------------------------------------------------------------------#
+
+
+def corrupt(block, positions=(0,), reverse=False):
+    """ Corrupts one or more bytes in a block of data, and returns the
+    corrupted result. If 'block' is an integer, the result is an incremented
+    copy. """
+
+    result = copy.deepcopy(block)
+    offset = -1 if reverse else 1
+    if isinstance(block, int):
+        return block + offset
+
+    for position in positions:
+        new = chr(((result[position] + offset) & 0xFF))
+        if not isinstance(block, str):
+            new = new.encode('latin_1')
+        result = result[0:position] + new + result[position + 1:]
+
+    assert len(result) == len(block)
+    return result
+
 
 def random_message(length):
     """ Generates a block of random bytes of a user-specified length. """
     return bytes([random.randint(0, 255) for x in range(length)])
+
+
+def parse_dict(node, backward=False):
+    """ Parses a dict of crypto keys and/or crypto data, and converts all
+    values to (or from) base64-encoding. This provides an easy way to generate
+    (or load) test-vectors stored as JSON. """
+
+    if isinstance(node, dict):
+        node = copy.deepcopy(node)
+
+        for key in node:
+            node[key] = parse_dict(node[key], backward)
+
+        return node
+
+    if isinstance(node, (bytes, bytearray)):
+        if backward:
+            return base64.decodebytes(node)
+
+        return base64.encodebytes(node).decode().strip()
+
+    if isinstance(node, str):
+        if backward:
+            return base64.decodebytes(node.encode('latin_1'))
+
+        return base64.encodebytes(node.encode('latin_1')).strip()
+
+    if isinstance(node, (float, int, bool)):
+        return node
+
+    raise ValueError("Unknown datatype of node. %s" % str(node))
+
+#------------------------------------------------------------------------------#
+
+
+def generate_reference(outfile=sys.stdout):
+    """ Generates a set of keys and some reference data. Encodes all values to
+    base64 and writes the result as JSON to outfile. """
+
+    keys = generate_keys(crypto.TweetNacl)
+    data = generate_data(crypto.TweetNacl, keys, 2**9)
+    export_data = parse_dict({"keys": keys, "data": data})
+    export_data = json.dumps(export_data, indent=2)
+
+    if outfile.seekable():
+        outfile.seek(0)
+
+    outfile.write(export_data)
 
 
 def generate_keys(source):
@@ -93,13 +163,14 @@ def generate_data(source, keys, msg_length=2**16 + 5):
 
     return data
 
+#------------------------------------------------------------------------------#
 
-def verify_data(source, data, keys):
-    """ Verifies a block of generated data using a batch of pre-existing keys.
-    Crypto libraries are accessed using the wrapper provided by 'source'. """
-    # pylint: disable=too-many-locals,too-many-statements
 
-    # Crypto-box verification.
+def verify_crypto_box(source, data, keys):
+    """ Verifies the crypto_box() portion of the nacl library. Tests the
+    'box' data and keys against a crypto-source. Also checks to make sure that
+    failures are detected OK. """
+
     secret = keys['box']['sender']['secret']
     public = keys['box']['receiver']['public']
     nonce = data['box']['nonce']
@@ -119,22 +190,99 @@ def verify_data(source, data, keys):
     readback = source.box.crypto_box_open_afternm(afternm, shared, nonce)
     assert readback == data['box']['msg']
 
-    # Crypto scalarmult verification.
-    secret = keys['box']['receiver']['secret']
-    public = keys['box']['receiver']['public']
-    assert public == source.scalarmult.crypto_scalarmult_base(secret)
+    args = {'cypher': cypher, 'public': public, 'secret': secret,
+            'nonce': nonce}
 
+    for key in args:
+        args[key] = corrupt(args[key], (1,))
+
+        try:
+            source.box.crypto_box_open(*[args[x] for x in args])
+            msg = "crypto_box_open() succeeded when it should fail."
+            assert False, msg
+        except ValueError:
+            pass
+
+        args[key] = corrupt(args[key], (1,), reverse=True)
+        source.box.crypto_box_open(*[args[x] for x in args])
+
+    args = {'afternm': afternm, 'shared': shared, 'nonce': nonce}
+
+    for key in args:
+        args[key] = corrupt(args[key], (1,))
+
+        try:
+            source.box.crypto_box_open_afternm(*[args[x] for x in args])
+            msg = "crypto_box_open_afternm() succeeded when it should fail."
+            assert False, msg
+        except ValueError:
+            pass
+
+        args[key] = corrupt(args[key], (1,), reverse=True)
+        source.box.crypto_box_open_afternm(*[args[x] for x in args])
+
+
+def verify_crypto_scalarmult(source, data):
+    """ Verifies the crypto_scalarmult() portion of the nacl library. Tests the
+    'scalarmult' data and keys against a crypto-source. Also checks to make
+    sure that failures are detected OK. """
+
+    # Crypto scalarmult verification.
     scalar = data['scalarmult']['scalar']
     element = data['scalarmult']['element']
     mult = data['scalarmult']['mult']
     assert mult == source.scalarmult.crypto_scalarmult(scalar, element)
 
+    args = {'element': element, 'scalar': scalar, 'mult': mult}
+
+    for key in args:
+        args[key] = corrupt(args[key], (1,))
+
+        assert args['mult'] != source.scalarmult.crypto_scalarmult(
+            args['scalar'], args['element']
+        )
+
+        args[key] = corrupt(args[key], (1,), reverse=True)
+
+        assert args['mult'] == source.scalarmult.crypto_scalarmult(
+            args['scalar'], args['element']
+        )
+
+
+def verify_crypto_sign(source, data, keys):
+    """ Verifies the crypto_sign() portion of the nacl library. Tests the
+    'sign' data and keys against a crypto-source. Also checks to make sure that
+    failures are detected OK. """
+
     # Crypto sign verification.
     msg = data['sign']['msg']
     signed = data['sign']['signed']
-    assert signed == source.sign.crypto_sign(msg, keys['sign']['secret'])
-    readback = source.sign.crypto_sign_open(signed, keys['sign']['public'])
+    secret = keys['sign']['secret']
+    public = keys['sign']['public']
+    assert signed == source.sign.crypto_sign(msg, secret)
+    readback = source.sign.crypto_sign_open(signed, public)
     assert readback == msg
+
+    args = {'signed': signed, 'public': public}
+
+    for key in args:
+        args[key] = corrupt(args[key], (1,))
+
+        try:
+            source.sign.crypto_sign_open(*[args[x] for x in args])
+            msg = "crypto_sign_open() succeeded when it should fail."
+            assert False, msg
+        except ValueError:
+            pass
+
+        args[key] = corrupt(args[key], (1,), reverse=True)
+        source.sign.crypto_sign_open(*[args[x] for x in args])
+
+
+def verify_crypto_secretbox(source, data, keys):
+    """ Verifies the crypto_secretbox() portion of the nacl library. Tests the
+    'secretbox' data and keys against a crypto-source. Also checks to make sure
+    that failures are detected OK. """
 
     # Crypto secretbox verification.
     nonce = data['secretbox']['nonce']
@@ -146,7 +294,27 @@ def verify_data(source, data, keys):
     assert readback == data['secretbox']['cypher']
     assert msg == source.secretbox.crypto_secretbox_open(cypher, key, nonce)
 
-    # Crypto stream verification.
+    args = {'cypher': cypher, 'key': key, 'nonce': nonce}
+
+    for key in args:
+        args[key] = corrupt(args[key], (1,))
+
+        try:
+            source.secretbox.crypto_secretbox_open(*[args[x] for x in args])
+            msg = "crypto_secretbox_open() succeeded when it should fail."
+            assert False, msg
+        except ValueError:
+            pass
+
+        args[key] = corrupt(args[key], (1,), reverse=True)
+        source.secretbox.crypto_secretbox_open(*[args[x] for x in args])
+
+
+def verify_crypto_stream(source, data, keys):
+    """ Verifies the crypto_stream() portion of the nacl library. Tests the
+    'stream' data and keys against a crypto-source. Also checks to make sure
+    that failures are detected OK. """
+
     alt = data['stream']['alt']
     cypher = data['stream']['cypher']
     length = data['stream']['length']
@@ -160,65 +328,98 @@ def verify_data(source, data, keys):
     readback = source.stream.crypto_stream_xor(msg, keys['stream'], nonce)[0]
     assert readback == cypher
 
-    # Crypto auth verification.
+    args = {'length': length, 'key': keys['stream'], 'nonce': nonce}
+    for key in args:
+        args[key] = corrupt(args[key], (1,))
+
+        result = source.stream.crypto_stream(*[args[x] for x in args])[0]
+        assert result != stream
+        assert len(result) == args['length']
+
+        args[key] = corrupt(args[key], (1,), reverse=True)
+        result = source.stream.crypto_stream(*[args[x] for x in args])[0]
+        assert result == stream
+
+    args = {'msg': msg, 'key': keys['stream'], 'nonce': nonce}
+    for key in args:
+        args[key] = corrupt(args[key], (1,))
+
+        result = source.stream.crypto_stream_xor(*[args[x] for x in args])[0]
+        assert result != stream
+        assert len(result) == len(msg)
+
+        args[key] = corrupt(args[key], (1,), reverse=True)
+        result = source.stream.crypto_stream_xor(*[args[x] for x in args])[0]
+        assert result == cypher
+
+
+def verify_crypto_auth(source, data, keys):
+    """ Verifies the crypto_auth() portion of the nacl library. Tests the
+    'auth' data and keys against a crypto-source. Also checks to make sure
+    that failures are detected OK. """
+
     msg = data['auth']['msg']
     readback = source.auth.crypto_auth(msg, keys['auth'])
     assert readback == data['auth']['auth']
     source.auth.crypto_auth_verify(msg, data['auth']['auth'], keys['auth'])
 
-    # Crypto onetimeauth verification.
+    args = {'msg': msg, 'auth': data['auth']['auth'], 'key': keys['auth']}
+
+    for key in args:
+        args[key] = corrupt(args[key], (1,))
+
+        try:
+            source.auth.crypto_auth_verify(*[args[x] for x in args])
+            msg = "crypto_auth_verify() succeeded when it should fail."
+            assert False, msg
+        except ValueError:
+            pass
+
+        args[key] = corrupt(args[key], (1,), reverse=True)
+        source.auth.crypto_auth_verify(*[args[x] for x in args])
+
+
+def verify_crypto_onetimeauth(source, data, keys):
+    """ Verifies the crypto_onetimeauth() portion of the nacl library. Tests
+    the 'onetimeauth' data and keys against a crypto-source. Also checks to
+    make sure that failures are detected OK. """
+
     msg = data['onetimeauth']['msg']
     auth = data['onetimeauth']['auth']
     key = keys['onetimeauth']
+
     readback = source.onetimeauth.crypto_onetimeauth(msg, key)
     assert readback == auth
     source.onetimeauth.crypto_onetimeauth_verify(msg, auth, key)
 
+    args = {'msg': msg, 'auth': auth, 'key': key}
 
-def parse_dict(node, backward=False):
-    """ Parses a dict of crypto keys and/or crypto data, and converts all
-    values to (or from) base64-encoding. This provides an easy way to generate
-    (or load) test-vectors stored as JSON. """
+    for key in args:
+        args[key] = corrupt(args[key], (1,))
 
-    if isinstance(node, dict):
-        node = copy.deepcopy(node)
+        try:
+            arg_list = [args[x] for x in args]
+            source.onetimeauth.crypto_onetimeauth_verify(*arg_list)
+            msg = "crypto_onetimeauth_verify() succeeded when it should fail."
+            assert False, msg
+        except ValueError:
+            pass
 
-        for key in node:
-            node[key] = parse_dict(node[key], backward)
-
-        return node
-
-    if isinstance(node, (bytes, bytearray)):
-        if backward:
-            return base64.decodebytes(node)
-
-        return base64.encodebytes(node).decode().strip()
-
-    if isinstance(node, str):
-        if backward:
-            return base64.decodebytes(node.encode('latin_1'))
-
-        return base64.encodebytes( node.encode('latin_1')).strip()
-
-    if isinstance(node, (float, int, bool)):
-        return node
-
-    raise ValueError("Unknown datatype of node. %s" % str(node))
+        args[key] = corrupt(args[key], (1,), reverse=True)
+        source.onetimeauth.crypto_onetimeauth_verify(*[args[x] for x in args])
 
 
-def generate_reference(outfile=sys.stdout):
-    """ Generates a set of keys and some reference data. Encodes all values to
-    base64 and writes the result as JSON to outfile. """
+def verify_data(source, data, keys):
+    """ Verifies a block of generated data using a batch of pre-existing keys.
+    Crypto libraries are accessed using the wrapper provided by 'source'. """
 
-    keys = generate_keys(crypto.TweetNacl)
-    data = generate_data(crypto.TweetNacl, keys, 2**9)
-    export_data = parse_dict({"keys": keys, "data": data})
-    export_data = json.dumps(export_data, indent=2)
-
-    if outfile.seekable():
-        outfile.seek(0)
-
-    outfile.write(export_data)
+    verify_crypto_box(source, data, keys)
+    verify_crypto_scalarmult(source, data)
+    verify_crypto_sign(source, data, keys)
+    verify_crypto_secretbox(source, data, keys)
+    verify_crypto_stream(source, data, keys)
+    verify_crypto_auth(source, data, keys)
+    verify_crypto_onetimeauth(source, data, keys)
 
 
 def main():
@@ -240,6 +441,7 @@ def main():
         print("Data source:  ", "reference.json")
         print("Verification: ", verify_source.auth.dll._name)
         verify_data(verify_source, reference['data'], reference['keys'])
+        print("Tests passed OK.")
 
     for key_source in (crypto.TweetNacl, crypto.Sodium):
         for data_source in (crypto.TweetNacl, crypto.Sodium):
