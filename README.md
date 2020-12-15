@@ -37,17 +37,19 @@ The changes of interest are:
 
 ## Build Instructions ##
 
-This library is presented as a standard GNU Autotools project. All of the usual suspects will work fine.
+This library is presented as a standard GNU Autotools project. All of the usual
+suspects will work fine.
 
-1. (If running from a Git clone) Run `./autogen.sh` to build the configure script
-   and its inputs. Not necessary if running from a `make dist`-generated source
-   tarball, which will already include a `configure` script.
+1. (If running from a Git clone) Run `./autogen.sh` to build the configure
+   script and its inputs. Not necessary if running from a `make dist`-generated
+   source tarball, which will already include a `configure` script.
 
 2. Run `./configure` to configure the build, or run it from a custom build
    directory. Add `--enable-sodium=no` to disable libsodium compatibility
    testing. Set `--with-rand=stdlib` for bare-metal use.
 
-3. Build using `make` and install using `make install`. Set a `DESTDIR` during `make install` if needed.
+3. Build using `make` and install using `make install`. Set a `DESTDIR` during
+   `make install` if needed.
 
 ## Current Status ##
 
@@ -59,5 +61,6 @@ fully autotoolized and looks like it works well.
 ## License ##
 
 Tweetnacl's original release was under a public-domain license, released by
-Daniel Bernstein. This release is relicensed under LGPLv2.1 for easy collaboration, and to reflect the work done improving public-domain tweetnacl's
-code quality into something reasonable.
+Daniel Bernstein. This release is relicensed under LGPLv2.1 for easy
+collaboration, and to reflect the work done improving public-domain
+tweetnacl's code quality into something reasonable.
