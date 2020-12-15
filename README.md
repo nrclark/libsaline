@@ -57,7 +57,7 @@ suspects will work fine.
 
 At the current time, this work is believed complete. All warnings have been
 fixed, and the code has been de-obfusticated where possible. A full test-suite
-is includedm which compares against libsodium for a reference. The design is
+is included which compares against libsodium for a reference. The design is
 fully autotoolized and looks like it works well.
 
 ## License ##
