@@ -47,4 +47,11 @@ check_LTLIBRARIES = cryptosodium.la cryptotweet.la
 check: $(srcdir)/test/test_crypto.py
 	LD_LIBRARY_PATH=$(builddir)/.libs python3 $<
 
+EXTRA_DIST = \
+    test/crypto_wrappers.h \
+    test/test_crypto.py \
+    test/reference.json \
+    test/crypto/__init__.py \
+    test/crypto/wrappers.py
+
 #------------------------------------------------------------------------------#
