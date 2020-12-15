@@ -3,8 +3,20 @@
 Provides a friendly way to compare the performance and correctness of tweetnacl
 as it goes through refactoring. """
 
+import sys
+import os
+import json
 import argparse
 from . import wrappers
+
+_choices = [
+    f"{os.path.dirname(os.path.realpath(__file__))}/test/crypto/crypto.json",
+    f"{os.getcwd()}/test/crypto/crypto.json"
+]
+
+_choices = [x for x in _choices if os.path.exists(x)]
+_config = json.loads(open(_choices[0]).read())
+_HAVE_LIBSODIUM = _config['have_libsodium'] == 'yes'
 
 TweetNacl = argparse.Namespace()
 TweetNacl.box = wrappers.CryptoBox(libfile = "cryptotweet.so")
@@ -15,16 +27,19 @@ TweetNacl.stream = wrappers.CryptoStream(libfile = "cryptotweet.so")
 TweetNacl.auth = wrappers.CryptoAuth(libfile = "cryptotweet.so")
 TweetNacl.onetimeauth = wrappers.CryptoOnetimeauth(libfile = "cryptotweet.so")
 TweetNacl.misc = wrappers.CryptoMisc(libfile = "cryptotweet.so")
+Providers = [TweetNacl]
 
-Sodium = argparse.Namespace()
-Sodium.box = wrappers.CryptoBox(libfile = "cryptosodium.so")
-Sodium.scalarmult = wrappers.CryptoScalarMult(libfile = "cryptosodium.so")
-Sodium.sign = wrappers.CryptoSign(libfile = "cryptosodium.so")
-Sodium.secretbox = wrappers.CryptoSecretbox(libfile = "cryptosodium.so")
-Sodium.stream = wrappers.CryptoStream(libfile = "cryptosodium.so")
-Sodium.auth = wrappers.CryptoAuth(libfile = "cryptosodium.so")
-Sodium.onetimeauth = wrappers.CryptoOnetimeauth(libfile = "cryptosodium.so")
-Sodium.misc = wrappers.CryptoMisc(libfile = "cryptosodium.so")
+if _HAVE_LIBSODIUM:
+    Sodium = argparse.Namespace()
+    Sodium.box = wrappers.CryptoBox(libfile = "cryptosodium.so")
+    Sodium.scalarmult = wrappers.CryptoScalarMult(libfile = "cryptosodium.so")
+    Sodium.sign = wrappers.CryptoSign(libfile = "cryptosodium.so")
+    Sodium.secretbox = wrappers.CryptoSecretbox(libfile = "cryptosodium.so")
+    Sodium.stream = wrappers.CryptoStream(libfile = "cryptosodium.so")
+    Sodium.auth = wrappers.CryptoAuth(libfile = "cryptosodium.so")
+    Sodium.onetimeauth = wrappers.CryptoOnetimeauth(libfile = "cryptosodium.so")
+    Sodium.misc = wrappers.CryptoMisc(libfile = "cryptosodium.so")
+    Providers.append(Sodium)
 
 del argparse
 del wrappers

@@ -9,16 +9,22 @@ libtweetnacl_la_SOURCES = randombytes.c tweetnacl.c tweetnacl_auth.c
 include_HEADERS = randombytes.h tweetnacl.h
 libtweetnacl_la_LDFLAGS = -release @LIB_RELEASE@
 
+check_LTLIBRARIES = cryptotweet.la
+
 #------------------------------------------------------------------------------#
 
-cryptosodium_la_SOURCES = \
-    test/crypto_box_wrapper.c test/crypto_auth_wrapper.c \
-    test/crypto_misc_wrapper.c test/crypto_onetimeauth_wrapper.c \
-    test/crypto_scalarmult_wrapper.c test/crypto_secretbox_wrapper.c \
-    test/crypto_sign_wrapper.c test/crypto_stream_wrapper.c
+if HAVE_LIBSODIUM
+    cryptosodium_la_SOURCES = \
+        test/crypto_box_wrapper.c test/crypto_auth_wrapper.c \
+        test/crypto_misc_wrapper.c test/crypto_onetimeauth_wrapper.c \
+        test/crypto_scalarmult_wrapper.c test/crypto_secretbox_wrapper.c \
+        test/crypto_sign_wrapper.c test/crypto_stream_wrapper.c
 
-cryptosodium_la_LDFLAGS = -module -avoid-version -rpath / $(AM_LDFLAGS)
-cryptosodium_la_LIBADD = -lsodium
+    cryptosodium_la_LDFLAGS = -module -avoid-version -rpath / $(AM_LDFLAGS)
+    cryptosodium_la_LIBADD = -lsodium
+
+    check_LTLIBRARIES += cryptosodium.la
+endif
 
 #------------------------------------------------------------------------------#
 
@@ -41,8 +47,6 @@ cryptotweet_la_CFLAGS = -D USE_TWEETNACL $(AM_CFLAGS)
 cryptotweet_la_LDFLAGS = -module -avoid-version -rpath / $(AM_LDFLAGS)
 
 #------------------------------------------------------------------------------#
-
-check_LTLIBRARIES = cryptosodium.la cryptotweet.la
 
 check: $(srcdir)/test/test_crypto.py
 	LD_LIBRARY_PATH=$(builddir)/.libs python3 $<

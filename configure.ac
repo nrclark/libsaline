@@ -98,6 +98,7 @@ AX_MAKE_ENABLE_OPT([sanitizers], [no], [Build with GCC sanitizers enabled])
 AX_MAKE_ENABLE_OPT([lint], [no], [Build with every warning GCC can emit])
 AX_MAKE_ENABLE_OPT([warnings], [yes], [Build with -Wall -Wextra -pedantic])
 AX_MAKE_ENABLE_OPT([werror], [yes], [Build with -Werror])
+AX_MAKE_ENABLE_OPT([sodium], [yes], [Test for compatiblity with libsodium])
 
 #---------------------- Configure For Optional Sanitizers  --------------------#
 
@@ -147,6 +148,14 @@ AS_IF([test "x$enable_werror" = xno], [], [
   AS_VAR_APPEND([CFLAGS],[" -Werror"])
 ])
 
+AS_IF([test "x$enable_sodium" = xno], [have_libsodium=no], [
+  AC_CHECK_LIB(sodium, crypto_box, [have_libsodium=yes],
+               [AC_MSG_ERROR([Couldn't find a working libsodium])])
+])
+
+AM_CONDITIONAL([HAVE_LIBSODIUM],[test x$have_libsodium = xyes])
+AC_SUBST([HAVE_LIBSODIUM], $have_libsodium)
+
 #-------------------- Place rand() selection into config.h  -------------------#
 
 AS_CASE($rand_source,
@@ -186,5 +195,5 @@ AH_TOP([#ifndef __CONFIG_H__
 #define __CONFIG_H__])
 AH_BOTTOM([#endif])
 
-AC_CONFIG_FILES([Makefile src/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile src/test/crypto/crypto.json])
 AC_OUTPUT

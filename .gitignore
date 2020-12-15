@@ -5,12 +5,15 @@
 *.so
 *.a
 *.m4
+*~
+config.py
 Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache/
 build-aux/
 __pycache__/
+crypto.json
 config.h
 config.h.in
 config.log

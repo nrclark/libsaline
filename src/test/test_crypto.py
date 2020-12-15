@@ -434,7 +434,7 @@ def main():
         reference = json.loads(infile.read())
         reference = parse_dict(reference, backward=True)
 
-    for verify_source in (crypto.TweetNacl, crypto.Sodium):
+    for verify_source in crypto.Providers:
         # pylint: disable=protected-access
         print("====================================")
         print("Key source:   ", "reference.json")
@@ -443,9 +443,9 @@ def main():
         verify_data(verify_source, reference['data'], reference['keys'])
         print("Tests passed OK.")
 
-    for key_source in (crypto.TweetNacl, crypto.Sodium):
-        for data_source in (crypto.TweetNacl, crypto.Sodium):
-            for verify_source in (crypto.TweetNacl, crypto.Sodium):
+    for key_source in crypto.Providers:
+        for data_source in crypto.Providers:
+            for verify_source in crypto.Providers:
                 # pylint: disable=protected-access
                 print("====================================")
                 print("Key source:   ", key_source.auth.dll._name)
