@@ -33,7 +33,9 @@ The changes of interest are:
 
 7. Added a thorough testbench that verifies libsodium compatibility.
 
-8. Autotoolized the library for fun and profit.
+8. Autotoolized the library for easy integration with common build-systems.
+
+9. Relicensed the library as LGPLv2.1.
 
 ## Build Instructions ##
 
