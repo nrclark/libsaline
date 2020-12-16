@@ -10,7 +10,7 @@ import argparse
 from . import wrappers
 
 _choices = [
-    f"{os.path.dirname(os.path.realpath(__file__))}/test/crypto/crypto.json",
+    f"{os.path.dirname(os.path.realpath(__file__))}/crypto.json",
     f"{os.getcwd()}/test/crypto/crypto.json"
 ]
 
